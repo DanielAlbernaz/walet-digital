@@ -65,7 +65,7 @@
                 {{ getDateStatus(bill.date).label }}
               </p>
             </div>
-            <button type="button" class="btn-pay" (click)="onPayBill(bill.id)">
+            <button *appPermission="'edit'" type="button" class="btn-pay" (click)="onPayBill(bill.id)">
               Pagar
             </button>
           </div>
@@ -74,7 +74,7 @@
     </div>
   </div>
 
-  <app-floating-action-button (clicked)="onFabClick()"></app-floating-action-button>
+  <app-floating-action-button *appPermission="'create'" (clicked)="onFabClick()"></app-floating-action-button>
 </app-dashboard-layout>
 
 <app-transaction-modal [isOpen]="isModalOpen" (close)="onCloseModal()"></app-transaction-modal>

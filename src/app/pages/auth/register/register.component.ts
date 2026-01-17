@@ -1,6 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { 
   faWallet, 
   faUser,
@@ -11,18 +11,20 @@ import {
   faArrowLeft
 } from '@fortawesome/free-solid-svg-icons';
 import { AuthService } from '../../../services/auth/auth.service';
+import { RegisterRequest } from '../../../models/user';
 
 @Component({
   selector: 'app-register',
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss']
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit {
   registerForm: FormGroup;
   showPassword: boolean = false;
   showConfirmPassword: boolean = false;
   isLoading: boolean = false;
   errorMessage: string = '';
+  inviteToken: string | null = null;
 
   // FontAwesome icons
   faWallet = faWallet;
@@ -36,6 +38,7 @@ export class RegisterComponent {
   constructor(
     private fb: FormBuilder,
     private router: Router,
+    private route: ActivatedRoute,
     private authService: AuthService
   ) {
     this.registerForm = this.fb.group({
@@ -45,6 +48,15 @@ export class RegisterComponent {
       confirmPassword: ['', [Validators.required]]
     }, {
       validators: this.passwordMatchValidator.bind(this)
+    });
+  }
+
+  ngOnInit(): void {
+    // Capturar invite_token da URL
+    this.route.queryParams.subscribe(params => {
+      if (params['invite']) {
+        this.inviteToken = params['invite'];
+      }
     });
   }
 

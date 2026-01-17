@@ -64,7 +64,7 @@
           <fa-icon [icon]="faArrowTrendUp"></fa-icon>
         </div>
         <p class="empty-text">Nenhuma receita encontrada neste mês</p>
-        <button type="button" class="btn-add-income" (click)="onFabClick()">
+        <button *appPermission="'create'" type="button" class="btn-add-income" (click)="onFabClick()">
           <fa-icon [icon]="faArrowTrendUp"></fa-icon>
           Adicionar Receita
         </button>
@@ -92,7 +92,7 @@
     </div>
   </div>
 
-  <app-floating-action-button (clicked)="onFabClick()"></app-floating-action-button>
+  <app-floating-action-button *appPermission="'create'" (clicked)="onFabClick()"></app-floating-action-button>
 </app-dashboard-layout>
 
 <app-transaction-modal [isOpen]="isModalOpen" (close)="onCloseModal()"></app-transaction-modal>

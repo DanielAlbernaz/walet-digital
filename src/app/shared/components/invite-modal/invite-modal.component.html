@@ -1,0 +1,72 @@
+<div *ngIf="isOpen" class="modal-overlay" (click)="onBackdropClick($event)">
+  <div class="modal-container">
+    <div class="modal-header">
+      <div class="modal-title-section">
+        <fa-icon [icon]="faEnvelope" class="modal-icon"></fa-icon>
+        <h2 class="modal-title">Convidar Usuário</h2>
+      </div>
+      <button type="button" class="modal-close" (click)="onClose()">
+        <fa-icon [icon]="faTimes"></fa-icon>
+      </button>
+    </div>
+
+    <div class="modal-content">
+      <form [formGroup]="inviteForm" (ngSubmit)="onSubmit()" class="invite-form">
+        <!-- Error Message -->
+        <div *ngIf="errorMessage" class="error-alert">
+          {{ errorMessage }}
+        </div>
+
+        <!-- Email Field -->
+        <div class="form-group">
+          <label for="email" class="form-label">Email</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            class="form-input"
+            placeholder="usuario@exemplo.com"
+            [class.input-error]="inviteForm.get('email')?.invalid && inviteForm.get('email')?.touched">
+          <div *ngIf="inviteForm.get('email')?.invalid && inviteForm.get('email')?.touched" class="error-message">
+            <span *ngIf="inviteForm.get('email')?.errors?.['required']">Email é obrigatório</span>
+            <span *ngIf="inviteForm.get('email')?.errors?.['email']">Email inválido</span>
+          </div>
+        </div>
+
+        <!-- Role Field -->
+        <div class="form-group">
+          <label for="role" class="form-label">Permissão</label>
+          <select
+            id="role"
+            formControlName="role"
+            class="form-select"
+            [class.input-error]="inviteForm.get('role')?.invalid && inviteForm.get('role')?.touched">
+            <option *ngFor="let option of roleOptions" [value]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+          <div *ngIf="inviteForm.get('role')?.invalid && inviteForm.get('role')?.touched" class="error-message">
+            Permissão é obrigatória
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn-cancel"
+            (click)="onClose()">
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            class="btn-submit"
+            [disabled]="isLoading || inviteForm.invalid">
+            <span *ngIf="isLoading" class="spinner"></span>
+            {{ isLoading ? 'Enviando...' : 'Enviar Convite' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

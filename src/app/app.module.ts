@@ -32,9 +32,14 @@ import { CartaoParcelasComponent } from './pages/cartao-parcelas/cartao-parcelas
 import { ConfiguracoesComponent } from './pages/configuracoes/configuracoes.component';
 import { FloatingActionButtonComponent } from './shared/components/floating-action-button/floating-action-button.component';
 import { TransactionModalComponent } from './shared/components/transaction-modal/transaction-modal.component';
+import { UpgradeModalComponent } from './shared/components/upgrade-modal/upgrade-modal.component';
+import { InviteModalComponent } from './shared/components/invite-modal/invite-modal.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
+import { RoleDirective } from './directives/role.directive';
+import { PermissionDirective } from './directives/permission.directive';
+import { FeatureDirective } from './directives/feature.directive';
 
 @NgModule({
   declarations: [
@@ -56,7 +61,12 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
     CartaoParcelasComponent,
     ConfiguracoesComponent,
     FloatingActionButtonComponent,
-    TransactionModalComponent
+    TransactionModalComponent,
+    UpgradeModalComponent,
+    InviteModalComponent,
+    RoleDirective,
+    PermissionDirective,
+    FeatureDirective
   ],
   imports: [
     BrowserModule,

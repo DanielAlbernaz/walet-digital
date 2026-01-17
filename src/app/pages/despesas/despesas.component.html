@@ -37,7 +37,7 @@
           <fa-icon [icon]="faArrowTrendDown"></fa-icon>
         </div>
         <p class="empty-text">Nenhuma despesa encontrada neste mês</p>
-        <button type="button" class="btn-add-expense" (click)="onFabClick()">
+        <button *appPermission="'create'" type="button" class="btn-add-expense" (click)="onFabClick()">
           <fa-icon [icon]="faArrowTrendDown"></fa-icon>
           Adicionar Despesa
         </button>
@@ -69,7 +69,7 @@
     </div>
   </div>
 
-  <app-floating-action-button (clicked)="onFabClick()"></app-floating-action-button>
+  <app-floating-action-button *appPermission="'create'" (clicked)="onFabClick()"></app-floating-action-button>
 </app-dashboard-layout>
 
 <app-transaction-modal [isOpen]="isModalOpen" (close)="onCloseModal()"></app-transaction-modal>

@@ -10,6 +10,133 @@
 
     <!-- Settings Groups -->
     <div class="settings-groups">
+      <!-- Seção: Plano Atual -->
+      <div class="settings-card">
+        <div class="card-header">
+          <fa-icon [icon]="faCrown" class="card-icon"></fa-icon>
+          <h2 class="card-title">Plano Atual</h2>
+        </div>
+        <div class="settings-items">
+          <div class="setting-item">
+            <div class="plan-info">
+              <div class="plan-name-section">
+                <span class="plan-name">{{ getPlanName() }}</span>
+                <span *ngIf="isPlanFree()" class="plan-badge free">Grátis</span>
+                <span *ngIf="isPlanPro()" class="plan-badge pro">Pro</span>
+              </div>
+              <div class="plan-users-section">
+                <p class="plan-users-text">
+                  <span class="users-current">{{ getTotalUsers() }}</span>
+                  de
+                  <span class="users-max">{{ getMaxUsers() }}</span>
+                  usuários
+                </p>
+                <span *ngIf="isUserLimitReached()" class="limit-badge">Limite atingido</span>
+              </div>
+            </div>
+            <button 
+              type="button" 
+              class="btn-upgrade"
+              [disabled]="isPlanPro()"
+              (click)="onUpgradeClick()">
+              <fa-icon [icon]="faCrown" class="upgrade-icon"></fa-icon>
+              Fazer upgrade
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Seção: Usuários & Convites (Apenas Owner) -->
+      <div *appRole="'owner'" class="settings-card">
+        <div class="card-header">
+          <fa-icon [icon]="faUsers" class="card-icon"></fa-icon>
+          <h2 class="card-title">Usuários & Convites</h2>
+        </div>
+        <div class="settings-items">
+          <!-- Lista de Usuários -->
+          <div class="users-section">
+            <h3 class="section-subtitle">Usuários</h3>
+            <div *ngIf="isLoadingUsers" class="loading-state">
+              Carregando usuários...
+            </div>
+            <div *ngIf="!isLoadingUsers && users.length > 0" class="users-list">
+              <div *ngFor="let user of users" class="user-item">
+                <div class="user-info">
+                  <div class="user-avatar">{{ user.user?.name?.charAt(0) || 'U' }}</div>
+                  <div class="user-details">
+                    <p class="user-name">{{ user.user?.name || 'Usuário' }}</p>
+                    <p class="user-email">{{ user.user?.email || '' }}</p>
+                  </div>
+                </div>
+                <div class="user-actions">
+                  <select 
+                    class="role-select"
+                    [value]="user.role"
+                    (change)="onUpdateUserRole(user.user_id, $any($event.target).value)">
+                    <option value="owner">Owner</option>
+                    <option value="editor">Editor</option>
+                    <option value="viewer">Viewer</option>
+                  </select>
+                  <button 
+                    *ngIf="user.user_id !== getCurrentUserId()"
+                    type="button" 
+                    class="btn-remove-user"
+                    (click)="onRemoveUser(user.user_id)"
+                    [title]="'Remover usuário'">
+                    <fa-icon [icon]="faTrash"></fa-icon>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="item-divider"></div>
+
+          <!-- Botão Convidar Usuário -->
+          <div class="invite-section">
+            <button 
+              type="button" 
+              class="btn-invite"
+              [disabled]="isUserLimitReached()"
+              (click)="onInviteUser()"
+              [title]="isUserLimitReached() ? 'Limite de usuários atingido' : 'Convidar usuário'">
+              <fa-icon [icon]="faEnvelope" class="invite-icon"></fa-icon>
+              Convidar usuário
+            </button>
+            <p *ngIf="isUserLimitReached()" class="limit-message">
+              Seu plano atual permite apenas {{ getMaxUsers() }} usuário(s)
+            </p>
+          </div>
+
+          <div class="item-divider" *ngIf="invites.length > 0"></div>
+
+          <!-- Lista de Convites -->
+          <div *ngIf="invites.length > 0" class="invites-section">
+            <h3 class="section-subtitle">Convites Pendentes</h3>
+            <div class="invites-list">
+              <div *ngFor="let invite of invites" class="invite-item">
+                <div class="invite-info">
+                  <div class="invite-details">
+                    <p class="invite-email">{{ invite.email }}</p>
+                    <p class="invite-role">{{ invite.role }}</p>
+                  </div>
+                  <span class="invite-status" [ngClass]="'status-' + getInviteStatus(invite).toLowerCase()">
+                    {{ getInviteStatus(invite) }}
+                  </span>
+                </div>
+                <button 
+                  *ngIf="getInviteStatus(invite) === 'Pendente'"
+                  type="button" 
+                  class="btn-cancel-invite"
+                  (click)="onRemoveInvite(invite.id)"
+                  title="Cancelar convite">
+                  <fa-icon [icon]="faTrash"></fa-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div *ngFor="let group of settingsGroups; let groupIndex = index" class="settings-card">
         <!-- Card Header -->
         <div class="card-header">
@@ -52,3 +179,7 @@
     </div>
   </div>
 </app-dashboard-layout>
+
+<!-- Modals -->
+<app-upgrade-modal [isOpen]="showUpgradeModal" (close)="onCloseUpgradeModal()"></app-upgrade-modal>
+<app-invite-modal [isOpen]="showInviteModal" (close)="onCloseInviteModal()" (inviteCreated)="onInviteCreated()"></app-invite-modal>

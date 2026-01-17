@@ -172,3 +172,313 @@
     border-color: var(--primary);
   }
 }
+
+// Seção: Plano Atual
+.plan-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.plan-name-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .plan-name {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 0;
+    text-transform: capitalize;
+  }
+
+  .plan-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+
+    &.free {
+      background: var(--muted);
+      color: var(--muted-foreground);
+    }
+
+    &.pro {
+      background: var(--primary-lighter);
+      color: var(--primary);
+    }
+  }
+}
+
+.plan-users-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .plan-users-text {
+    font-size: 14px;
+    color: var(--muted-foreground);
+    margin: 0;
+
+    .users-current {
+      font-weight: 600;
+      color: var(--foreground);
+    }
+
+    .users-max {
+      font-weight: 600;
+      color: var(--foreground);
+    }
+  }
+
+  .limit-badge {
+    padding: 4px 8px;
+    background: var(--warning-light);
+    color: var(--warning);
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+}
+
+.btn-upgrade {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  .upgrade-icon {
+    font-size: 16px;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--primary-hover);
+    box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// Seção: Usuários & Convites
+.section-subtitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground);
+  margin: 0 0 12px 0;
+}
+
+.users-section,
+.invites-section {
+  margin-bottom: 16px;
+}
+
+.loading-state {
+  padding: 16px;
+  text-align: center;
+  color: var(--muted-foreground);
+  font-size: 14px;
+}
+
+.users-list,
+.invites-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.user-item,
+.invite-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  background: var(--muted);
+  border-radius: 8px;
+  gap: 12px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  .user-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--foreground);
+    margin: 0;
+  }
+
+  .user-email {
+    font-size: 12px;
+    color: var(--muted-foreground);
+    margin: 0;
+  }
+}
+
+.user-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.role-select {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--card);
+  color: var(--foreground);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: var(--primary);
+  }
+}
+
+.btn-remove-user,
+.btn-cancel-invite {
+  padding: 6px 10px;
+  border: 1px solid var(--destructive);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--destructive);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    background: var(--destructive-light);
+  }
+}
+
+.invite-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.btn-invite {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border: 1px solid var(--primary);
+  border-radius: 8px;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  .invite-icon {
+    font-size: 16px;
+  }
+
+  &:hover:not(:disabled) {
+    background: var(--primary-hover);
+    box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.limit-message {
+  font-size: 12px;
+  color: var(--warning);
+  margin: 0;
+}
+
+.invite-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex: 1;
+  gap: 12px;
+}
+
+.invite-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .invite-email {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--foreground);
+    margin: 0;
+  }
+
+  .invite-role {
+    font-size: 12px;
+    color: var(--muted-foreground);
+    margin: 0;
+    text-transform: capitalize;
+  }
+}
+
+.invite-status {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+
+  &.status-pendente {
+    background: var(--warning-light);
+    color: var(--warning);
+  }
+
+  &.status-aceito {
+    background: var(--success-light);
+    color: var(--success);
+  }
+
+  &.status-expirado {
+    background: var(--destructive-light);
+    color: var(--destructive);
+  }
+}

@@ -1,0 +1,51 @@
+<div *ngIf="isOpen" class="modal-overlay" (click)="onBackdropClick($event)">
+  <div class="modal-container">
+    <div class="modal-header">
+      <div class="modal-title-section">
+        <fa-icon [icon]="faCrown" class="modal-icon"></fa-icon>
+        <h2 class="modal-title">Fazer Upgrade para Pro</h2>
+      </div>
+      <button type="button" class="modal-close" (click)="onClose()">
+        <fa-icon [icon]="faTimes"></fa-icon>
+      </button>
+    </div>
+
+    <div class="modal-content">
+      <p class="modal-description">
+        O plano Pro oferece recursos avançados para gerenciar suas finanças:
+      </p>
+
+      <ul class="features-list">
+        <li class="feature-item">
+          <fa-icon [icon]="faCrown" class="feature-icon"></fa-icon>
+          <span>Parcelamento ilimitado</span>
+        </li>
+        <li class="feature-item">
+          <fa-icon [icon]="faCrown" class="feature-icon"></fa-icon>
+          <span>Relatórios avançados e gráficos</span>
+        </li>
+        <li class="feature-item">
+          <fa-icon [icon]="faCrown" class="feature-icon"></fa-icon>
+          <span>Exportação de dados</span>
+        </li>
+        <li class="feature-item">
+          <fa-icon [icon]="faCrown" class="feature-icon"></fa-icon>
+          <span>Múltiplos usuários (até 10 usuários)</span>
+        </li>
+        <li class="feature-item">
+          <fa-icon [icon]="faCrown" class="feature-icon"></fa-icon>
+          <span>Suporte prioritário</span>
+        </li>
+      </ul>
+
+      <div class="modal-footer">
+        <p class="modal-note">
+          O sistema de pagamento será implementado em breve.
+        </p>
+        <button type="button" class="btn-close-modal" (click)="onClose()">
+          Entendi
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

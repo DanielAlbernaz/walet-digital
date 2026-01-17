@@ -70,7 +70,7 @@
     </div>
   </div>
 
-  <app-floating-action-button (clicked)="onFabClick()"></app-floating-action-button>
+  <app-floating-action-button *appPermission="'create'" (clicked)="onFabClick()"></app-floating-action-button>
 </app-dashboard-layout>
 
 <app-transaction-modal [isOpen]="isModalOpen" (close)="onCloseModal()"></app-transaction-modal>

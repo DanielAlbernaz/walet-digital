@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { AuthService } from '../../../services/auth/auth.service';
 import { faTimes, faCalendar } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
@@ -32,15 +33,12 @@ export class TransactionModalComponent implements OnInit {
     'Outros'
   ];
 
-  repetitionOptions = [
-    { value: 'unico', label: 'Único' },
-    { value: 'mensal', label: 'Mensal' },
-    { value: 'semanal', label: 'Semanal' },
-    { value: 'anual', label: 'Anual' },
-    { value: 'parcelado', label: 'Parcelado' }
-  ];
+  repetitionOptions: { value: string; label: string }[] = [];
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private authService: AuthService
+  ) {
     this.transactionForm = this.fb.group({
       type: ['despesa', Validators.required],
       value: ['0,00', [Validators.required]],
@@ -55,6 +53,9 @@ export class TransactionModalComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    // Carregar opções de repetição baseadas nas features do plano
+    this.loadRepetitionOptions();
+
     this.transactionForm.get('type')?.valueChanges.subscribe(type => {
       this.selectedType = type;
     });
@@ -74,6 +75,24 @@ export class TransactionModalComponent implements OnInit {
 
   get isParceladoSelected(): boolean {
     return this.transactionForm.get('repetition')?.value === 'parcelado';
+  }
+
+  hasInstallmentsFeature(): boolean {
+    return this.authService.hasFeature('installments');
+  }
+
+  private loadRepetitionOptions(): void {
+    this.repetitionOptions = [
+      { value: 'unico', label: 'Único' },
+      { value: 'mensal', label: 'Mensal' },
+      { value: 'semanal', label: 'Semanal' },
+      { value: 'anual', label: 'Anual' }
+    ];
+
+    // Adicionar "Parcelado" apenas se tiver a feature
+    if (this.hasInstallmentsFeature()) {
+      this.repetitionOptions.push({ value: 'parcelado', label: 'Parcelado' });
+    }
   }
 
   selectType(type: 'receita' | 'despesa'): void {
