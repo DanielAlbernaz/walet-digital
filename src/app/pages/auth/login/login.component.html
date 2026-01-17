@@ -1,0 +1,97 @@
+<div class="login-container">
+  <!-- Decorative background circles -->
+  <div class="background-decoration">
+    <div class="circle circle-1"></div>
+    <div class="circle circle-2"></div>
+  </div>
+
+  <!-- Login Card -->
+  <div class="login-card">
+    <!-- Logo and Branding -->
+    <div class="branding-section">
+      <div class="logo-wrapper">
+        <fa-icon [icon]="faWallet" class="logo-icon"></fa-icon>
+      </div>
+      <h1 class="brand-title">
+        Finanças<span class="brand-title-primary">Pro</span>
+      </h1>
+      <p class="brand-subtitle">Controle suas finanças de forma simples</p>
+    </div>
+
+    <!-- Login Form -->
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <!-- Email Field -->
+      <div class="form-group">
+        <label for="email" class="form-label">Email</label>
+        <div class="input-wrapper">
+          <fa-icon [icon]="faEnvelope" class="input-icon"></fa-icon>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            class="form-input"
+            placeholder="seu@email.com"
+            [class.error]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched">
+        </div>
+        <div *ngIf="loginForm.get('email')?.invalid && loginForm.get('email')?.touched" class="error-message">
+          <span *ngIf="loginForm.get('email')?.errors?.['required']">Email é obrigatório</span>
+          <span *ngIf="loginForm.get('email')?.errors?.['email']">Email inválido</span>
+        </div>
+      </div>
+
+      <!-- Password Field -->
+      <div class="form-group">
+        <label for="password" class="form-label">Senha</label>
+        <div class="input-wrapper">
+          <fa-icon [icon]="faLock" class="input-icon"></fa-icon>
+          <input
+            id="password"
+            [type]="showPassword ? 'text' : 'password'"
+            formControlName="password"
+            class="form-input"
+            placeholder="••••••••"
+            [class.error]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched">
+          <button
+            type="button"
+            (click)="togglePasswordVisibility()"
+            class="password-toggle"
+            tabindex="-1">
+            <fa-icon [icon]="showPassword ? faEyeSlash : faEye"></fa-icon>
+          </button>
+        </div>
+        <div *ngIf="loginForm.get('password')?.invalid && loginForm.get('password')?.touched" class="error-message">
+          <span *ngIf="loginForm.get('password')?.errors?.['required']">Senha é obrigatória</span>
+          <span *ngIf="loginForm.get('password')?.errors?.['minlength']">Senha deve ter pelo menos 6 caracteres</span>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button
+        type="submit"
+        class="submit-button"
+        [disabled]="isLoading || loginForm.invalid">
+        <span *ngIf="isLoading" class="spinner"></span>
+        Entrar
+      </button>
+    </form>
+
+    <!-- Footer Links -->
+    <div class="form-footer">
+      <button
+        type="button"
+        (click)="goToForgotPassword()"
+        class="forgot-password-link">
+        Esqueci minha senha
+      </button>
+      <p class="register-text">
+        Não tem uma conta? 
+        <button
+          type="button"
+          (click)="goToRegister()"
+          class="register-link">
+          Criar conta
+        </button>
+      </p>
+    </div>
+  </div>
+</div>

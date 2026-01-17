@@ -1,13 +1,16 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
-
-import { LoginComponent } from './components/login/login.component';
-import { RegisterComponent } from './components/register/register.component';
-import { DashboardComponent } from './components/main/dashboard/dashboard.component';
 import { AppComponent } from './app.component';
-import { IsAdminGuard } from './guards/auth.guard';
+import { LoginComponent } from './pages/auth/login/login.component';
+import { RegisterComponent } from './pages/auth/register/register.component';
+import { ForgotPasswordComponent } from './pages/auth/forgot-password/forgot-password.component';
 
 const routes: Routes = [
+  {
+    path: '',
+    redirectTo: '/login',
+    pathMatch: 'full'
+  },
   {
     path: 'login',
     component: LoginComponent
@@ -17,14 +20,12 @@ const routes: Routes = [
     component: RegisterComponent
   },
   {
-    path: 'dashboard',
-    component: DashboardComponent,
-    canActivate: [IsAdminGuard]
+    path: 'forgot-password',
+    component: ForgotPasswordComponent
   },
   {
-    path: '',
-    component: AppComponent,
-    canActivate: [IsAdminGuard]
+    path: '**',
+    redirectTo: '/login'
   }
 ];
 
