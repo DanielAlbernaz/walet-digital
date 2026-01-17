@@ -1,0 +1,53 @@
+<!-- Mobile overlay -->
+<div
+  *ngIf="isOpen"
+  class="sidebar-overlay d-lg-none"
+  (click)="onToggle()">
+</div>
+
+<!-- Sidebar -->
+<aside
+  class="sidebar"
+  [class.sidebar-open]="isOpen"
+  [class.sidebar-closed]="!isOpen">
+
+  <div class="sidebar-content">
+    <!-- Toggle button - desktop only -->
+    <div class="sidebar-toggle d-none d-lg-flex">
+      <button
+        type="button"
+        class="toggle-button"
+        (click)="onToggle()"
+        aria-label="Toggle sidebar">
+        <fa-icon [icon]="isOpen ? faChevronLeft : faChevronRight"></fa-icon>
+      </button>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="sidebar-nav">
+      <a
+        *ngFor="let item of menuItems"
+        [routerLink]="item.disabled ? null : item.path"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: item.path === '/dashboard' }"
+        class="nav-item"
+        [class.disabled]="item.disabled"
+        (click)="item.disabled && $event.preventDefault()">
+
+        <div class="nav-icon-wrapper">
+          <fa-icon [icon]="item.icon" class="nav-icon"></fa-icon>
+        </div>
+
+        <span *ngIf="isOpen" class="nav-label">
+          {{ item.label }}
+          <span *ngIf="item.disabled" class="nav-badge">Em breve</span>
+        </span>
+      </a>
+    </nav>
+
+    <!-- Footer -->
+    <div *ngIf="isOpen" class="sidebar-footer">
+      <p class="footer-text">© 2024 FinançasPro</p>
+    </div>
+  </div>
+</aside>

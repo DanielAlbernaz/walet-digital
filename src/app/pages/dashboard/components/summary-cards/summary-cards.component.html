@@ -1,0 +1,20 @@
+<div class="summary-cards">
+  <div 
+    *ngFor="let card of cards"
+    class="summary-card"
+    [class]="card.bgClass + ' ' + card.borderClass">
+    
+    <div class="card-content">
+      <div class="card-info">
+        <p class="card-title">{{ card.title }}</p>
+        <p class="card-value" [class]="card.colorClass">
+          {{ formatCurrency(card.value) }}
+        </p>
+      </div>
+      
+      <div class="card-icon-wrapper" [class]="card.bgClass">
+        <fa-icon [icon]="card.icon" class="card-icon" [class]="card.colorClass"></fa-icon>
+      </div>
+    </div>
+  </div>
+</div>

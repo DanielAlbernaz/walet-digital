@@ -10,6 +10,7 @@ import {
   faEyeSlash,
   faArrowLeft
 } from '@fortawesome/free-solid-svg-icons';
+import { AuthService } from '../../../services/auth/auth.service';
 
 @Component({
   selector: 'app-register',
@@ -21,6 +22,7 @@ export class RegisterComponent {
   showPassword: boolean = false;
   showConfirmPassword: boolean = false;
   isLoading: boolean = false;
+  errorMessage: string = '';
 
   // FontAwesome icons
   faWallet = faWallet;
@@ -33,7 +35,8 @@ export class RegisterComponent {
 
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
     this.registerForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2)]],
@@ -78,16 +81,30 @@ export class RegisterComponent {
   onSubmit(): void {
     if (this.registerForm.valid) {
       this.isLoading = true;
+      this.errorMessage = '';
       const { name, email, password } = this.registerForm.value;
       
-      // TODO: Implementar registro
-      console.log('Register:', { name, email, password });
-      
-      // Simulando chamada de API
-      setTimeout(() => {
-        this.isLoading = false;
-        // this.router.navigate(['/login']);
-      }, 1000);
+      this.authService.register({ name, email, password }).subscribe({
+        next: () => {
+          this.isLoading = false;
+          this.router.navigate(['/login']);
+        },
+        error: (error) => {
+          this.isLoading = false;
+          if (error.error && typeof error.error === 'string') {
+            this.errorMessage = error.error;
+          } else if (error.error?.message) {
+            this.errorMessage = error.error.message;
+          } else if (error.error?.errors) {
+            // Erros de validação do Laravel
+            const errors = error.error.errors;
+            const firstError = Object.values(errors)[0];
+            this.errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
+          } else {
+            this.errorMessage = 'Erro ao criar conta. Tente novamente.';
+          }
+        }
+      });
     } else {
       this.markFormGroupTouched(this.registerForm);
     }

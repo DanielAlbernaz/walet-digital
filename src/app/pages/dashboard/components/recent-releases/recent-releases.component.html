@@ -1,0 +1,51 @@
+<div class="recent-releases">
+  <div class="releases-header">
+    <fa-icon [icon]="faClock" class="header-icon"></fa-icon>
+    <h3 class="header-title">Últimos Lançamentos</h3>
+  </div>
+
+  <div *ngIf="releases.length === 0" class="empty-state">
+    <div class="empty-icon-wrapper">
+      <fa-icon [icon]="faClock" class="empty-icon"></fa-icon>
+    </div>
+    <p class="empty-text">Nenhum lançamento ainda</p>
+  </div>
+
+  <div *ngIf="releases.length > 0" class="releases-list">
+    <div 
+      *ngFor="let release of releases"
+      class="release-item">
+      
+      <div class="release-info">
+        <div 
+          class="release-icon-wrapper"
+          [class.income]="isIncome(release)"
+          [class.expense]="!isIncome(release)">
+          <fa-icon 
+            [icon]="isIncome(release) ? faArrowTrendUp : faArrowTrendDown"
+            class="release-icon"
+            [class.icon-income]="isIncome(release)"
+            [class.icon-expense]="!isIncome(release)">
+          </fa-icon>
+        </div>
+
+        <div class="release-details">
+          <p class="release-description">{{ release.description }}</p>
+          <p class="release-meta">
+            {{ release.category }} • {{ formatDate(release.date) }}
+          </p>
+        </div>
+      </div>
+
+      <div class="release-value-section">
+        <span 
+          class="release-value"
+          [class.value-income]="isIncome(release)"
+          [class.value-expense]="!isIncome(release)">
+          {{ isIncome(release) ? '+' : '-' }} {{ formatCurrency(release.value) }}
+        </span>
+        <p class="release-status">{{ release.is_paid ? 'Pago' : 'Pendente' }}</p>
+      </div>
+    </div>
+  </div>
+</div>

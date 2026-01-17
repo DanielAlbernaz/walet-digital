@@ -1,0 +1,109 @@
+.summary-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 992px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.summary-card {
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+
+  &.bg-success-light {
+    background: var(--success-light);
+    border: 1px solid rgba(34, 197, 94, 0.3); // Verde mais forte que o background
+  }
+
+  &.bg-destructive-light {
+    background: var(--destructive-light);
+    border: 1px solid rgba(239, 68, 68, 0.3); // Vermelho mais forte que o background
+  }
+
+  &.bg-primary-lighter {
+    background: var(--primary-lighter);
+    border: 1px solid rgba(37, 99, 235, 0.3); // Azul mais forte que o background
+  }
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06);
+  }
+
+  .card-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .card-info {
+      .card-title {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--muted-foreground);
+        margin: 0 0 8px 0;
+      }
+
+      .card-value {
+        font-size: 24px;
+        font-weight: 700;
+        margin: 0;
+
+        &.text-success {
+          color: var(--success) !important;
+        }
+
+        &.text-destructive {
+          color: var(--destructive) !important;
+        }
+
+        &.text-primary {
+          color: var(--primary) !important;
+        }
+      }
+    }
+
+      .card-icon-wrapper {
+        border-radius: 12px;
+        padding: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        &.bg-success-light {
+          background: var(--success-light);
+        }
+
+        &.bg-destructive-light {
+          background: var(--destructive-light);
+        }
+
+        &.bg-primary-lighter {
+          background: var(--primary-lighter);
+        }
+
+        .card-icon {
+          font-size: 24px;
+
+          &.text-success {
+            color: var(--success) !important;
+          }
+
+          &.text-destructive {
+            color: var(--destructive) !important;
+          }
+
+          &.text-primary {
+            color: var(--primary) !important;
+          }
+        }
+      }
+  }
+}

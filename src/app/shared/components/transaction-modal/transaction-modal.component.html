@@ -1,0 +1,143 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="onClose()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h2 class="modal-title">Novo Lançamento</h2>
+      <button type="button" class="modal-close-button" (click)="onClose()" aria-label="Fechar">
+        <fa-icon [icon]="faTimes"></fa-icon>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      <form [formGroup]="transactionForm" class="transaction-form">
+        <!-- Tipo -->
+        <div class="form-group">
+          <label class="form-label">Tipo</label>
+          <div class="type-selector">
+            <button
+              type="button"
+              class="type-button"
+              [class.type-button-active]="selectedType === 'receita'"
+              [class.type-receita]="selectedType === 'receita'"
+              (click)="selectType('receita')">
+              Receita
+            </button>
+            <button
+              type="button"
+              class="type-button"
+              [class.type-button-active]="selectedType === 'despesa'"
+              [class.type-despesa]="selectedType === 'despesa'"
+              (click)="selectType('despesa')">
+              Despesa
+            </button>
+          </div>
+        </div>
+
+        <!-- Valor -->
+        <div class="form-group">
+          <label class="form-label">Valor (R$)</label>
+          <input
+            type="text"
+            formControlName="value"
+            class="form-input"
+            placeholder="0,00"
+            [class.input-error]="transactionForm.get('value')?.invalid && transactionForm.get('value')?.touched">
+          <span class="error-message" *ngIf="getFieldError('value')">{{ getFieldError('value') }}</span>
+        </div>
+
+        <!-- Data de Competência -->
+        <div class="form-group">
+          <label class="form-label">Data de Competência</label>
+          <input
+            type="date"
+            formControlName="competenceDate"
+            class="form-input"
+            [class.input-error]="transactionForm.get('competenceDate')?.invalid && transactionForm.get('competenceDate')?.touched">
+          <span class="error-message" *ngIf="getFieldError('competenceDate')">{{ getFieldError('competenceDate') }}</span>
+        </div>
+
+        <!-- Data de Pagamento (opcional) -->
+        <div class="form-group">
+          <label class="form-label">Data de Pagamento (opcional)</label>
+          <input
+            type="date"
+            formControlName="paymentDate"
+            class="form-input">
+        </div>
+
+        <!-- Descrição -->
+        <div class="form-group">
+          <label class="form-label">Descrição</label>
+          <input
+            type="text"
+            formControlName="description"
+            class="form-input"
+            placeholder="Ex: Aluguel, Salário..."
+            [class.input-error]="transactionForm.get('description')?.invalid && transactionForm.get('description')?.touched">
+          <span class="error-message" *ngIf="getFieldError('description')">{{ getFieldError('description') }}</span>
+        </div>
+
+        <!-- Categoria -->
+        <div class="form-group">
+          <label class="form-label">Categoria</label>
+          <mat-form-field appearance="outline" class="custom-form-field">
+            <mat-select
+              formControlName="category"
+              placeholder=""
+              [class.input-error]="transactionForm.get('category')?.invalid && transactionForm.get('category')?.touched">
+              <mat-option *ngFor="let category of categories" [value]="category">
+                {{ category }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="transactionForm.get('category')?.invalid && transactionForm.get('category')?.touched">
+              {{ getFieldError('category') }}
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <!-- Repetição -->
+        <div class="form-group">
+          <label class="form-label">Repetição</label>
+          <mat-form-field appearance="outline" class="custom-form-field">
+            <mat-select formControlName="repetition" placeholder="">
+              <mat-option *ngFor="let option of repetitionOptions" [value]="option.value">
+                {{ option.label }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <!-- Quantidade de Parcelas (mostrar apenas quando Parcelado estiver selecionado) -->
+        <div class="form-group" *ngIf="isParceladoSelected">
+          <label class="form-label">Quantidade de Parcelas</label>
+          <input
+            type="number"
+            formControlName="installments"
+            class="form-input"
+            placeholder="Ex: 12"
+            min="1"
+            [class.input-error]="transactionForm.get('installments')?.invalid && transactionForm.get('installments')?.touched">
+          <span class="error-message" *ngIf="getFieldError('installments')">{{ getFieldError('installments') }}</span>
+        </div>
+
+        <!-- Observação (opcional) -->
+        <div class="form-group">
+          <label class="form-label">Observação (opcional)</label>
+          <textarea
+            formControlName="observation"
+            class="form-textarea"
+            rows="4"
+            placeholder="Adicione uma observação...">
+          </textarea>
+        </div>
+      </form>
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="modal-footer">
+      <button type="button" class="btn btn-cancel" (click)="onClose()">Cancelar</button>
+      <button type="button" class="btn btn-save" (click)="onSave()">Salvar</button>
+    </div>
+  </div>
+</div>

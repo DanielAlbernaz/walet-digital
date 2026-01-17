@@ -8,6 +8,7 @@ import {
   faEye, 
   faEyeSlash 
 } from '@fortawesome/free-solid-svg-icons';
+import { AuthService } from '../../../services/auth/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -26,9 +27,12 @@ export class LoginComponent {
   faEye = faEye;
   faEyeSlash = faEyeSlash;
 
+  errorMessage: string = '';
+
   constructor(
     private fb: FormBuilder,
-    private router: Router
+    private router: Router,
+    private authService: AuthService
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -43,16 +47,25 @@ export class LoginComponent {
   onSubmit(): void {
     if (this.loginForm.valid) {
       this.isLoading = true;
+      this.errorMessage = '';
       const { email, password } = this.loginForm.value;
       
-      // TODO: Implementar autenticação
-      console.log('Login:', { email, password });
-      
-      // Simulando chamada de API
-      setTimeout(() => {
-        this.isLoading = false;
-        // this.router.navigate(['/dashboard']);
-      }, 1000);
+      this.authService.login({ email, password }).subscribe({
+        next: () => {
+          this.isLoading = false;
+          this.router.navigate(['/dashboard']);
+        },
+        error: (error) => {
+          this.isLoading = false;
+          if (error.error && typeof error.error === 'string') {
+            this.errorMessage = error.error;
+          } else if (error.error?.message) {
+            this.errorMessage = error.error.message;
+          } else {
+            this.errorMessage = 'Erro ao fazer login. Tente novamente.';
+          }
+        }
+      });
     } else {
       this.markFormGroupTouched(this.loginForm);
     }

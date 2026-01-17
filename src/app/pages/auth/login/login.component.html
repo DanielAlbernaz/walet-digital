@@ -20,6 +20,10 @@
 
     <!-- Login Form -->
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="error-alert">
+        {{ errorMessage }}
+      </div>
       <!-- Email Field -->
       <div class="form-group">
         <label for="email" class="form-label">Email</label>

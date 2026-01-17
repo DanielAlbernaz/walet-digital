@@ -1,0 +1,20 @@
+<app-dashboard-layout>
+  <div class="dashboard-page">
+    <app-month-selector></app-month-selector>
+
+    <app-summary-cards
+      [totalIncome]="totalIncome"
+      [totalExpenses]="totalExpenses"
+      [balance]="balance">
+    </app-summary-cards>
+
+    <div class="dashboard-grid">
+      <app-upcoming-bills [bills]="upcomingBills"></app-upcoming-bills>
+      <app-recent-releases [releases]="recentReleases"></app-recent-releases>
+    </div>
+  </div>
+
+  <app-floating-action-button (clicked)="onFabClick()"></app-floating-action-button>
+</app-dashboard-layout>
+
+<app-transaction-modal [isOpen]="isModalOpen" (close)="onCloseModal()"></app-transaction-modal>

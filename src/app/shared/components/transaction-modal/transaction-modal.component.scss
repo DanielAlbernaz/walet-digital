@@ -1,0 +1,558 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  padding: 16px;
+}
+
+.modal-container {
+  background: var(--card);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border);
+
+  .modal-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 0;
+  }
+
+  .modal-close-button {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--muted-foreground);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+
+    &:hover {
+      background: var(--accent);
+      color: var(--foreground);
+    }
+
+    fa-icon {
+      font-size: 18px;
+    }
+  }
+}
+
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+.transaction-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+
+  // Não precisa margin-top quando label é HTML normal
+  mat-form-field {
+    margin-top: 0 !important;
+  }
+}
+
+.form-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.type-selector {
+  display: flex;
+  gap: 8px;
+
+  .type-button {
+    flex: 1;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--muted-foreground);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    &.type-button-active {
+      &.type-receita {
+        background: var(--success);
+        color: var(--success-foreground);
+        border-color: var(--success);
+      }
+
+      &.type-despesa {
+        background: hsl(0, 84%, 60%); // Cor vermelha similar ao mockup #ED5565
+        color: var(--destructive-foreground);
+        border-color: hsl(0, 84%, 60%);
+      }
+    }
+
+    &:hover:not(.type-button-active) {
+      background: var(--accent);
+      border-color: var(--border);
+    }
+  }
+}
+
+.form-input,
+.form-select,
+.form-textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--foreground);
+  background: var(--card);
+  transition: all 0.2s ease;
+
+  &::placeholder {
+    color: var(--muted-foreground);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+  }
+
+  &.input-error {
+    border-color: var(--destructive);
+  }
+
+  // Input type="date" - ajustar padding para o ícone nativo
+  &[type="date"] {
+    padding-right: 12px; // Padding normal, o navegador adiciona o ícone automaticamente
+    position: relative;
+
+    // Esconder o ícone nativo do navegador em alguns casos se necessário
+    &::-webkit-calendar-picker-indicator {
+      opacity: 1;
+      cursor: pointer;
+    }
+  }
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+.input-with-icon {
+  position: relative;
+
+  .form-input {
+    padding-right: 40px;
+  }
+
+  .input-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted-foreground);
+    font-size: 16px;
+    pointer-events: none;
+  }
+}
+
+.custom-form-field {
+  width: 100%;
+
+  // Garantir espaço para o label flutuante não ser cortado
+  margin-top: 0 !important;
+  overflow: visible !important;
+
+  ::ng-deep {
+    // Garantir que o wrapper tenha fundo branco e padding correto
+    .mat-mdc-text-field-wrapper {
+      padding: 0 !important;
+      background: var(--card) !important;
+      overflow: visible !important; // Permitir que o label flutuante não seja cortado
+    }
+
+    .mat-mdc-form-field-flex {
+      min-height: 42px !important;
+      height: 42px !important;
+      align-items: center !important;
+      background: var(--card) !important;
+      overflow: visible !important; // Permitir que o label flutuante não seja cortado
+      position: relative !important;
+    }
+
+    // Container do mat-form-field - garantir que não corte o label
+    .mat-mdc-form-field {
+      overflow: visible !important;
+      position: relative !important;
+
+      // Sem padding-top quando não tem floating label
+      &.mat-form-field-has-label {
+        padding-top: 0 !important;
+      }
+    }
+
+    // Esconder o label wrapper do Material quando usamos label HTML externo
+    .mat-mdc-form-field-label-wrapper {
+      display: none !important;
+    }
+
+    // Esconder o floating label quando não está sendo usado
+    .mat-mdc-floating-label {
+      display: none !important;
+    }
+
+    .mat-mdc-text-field-wrapper.mdc-text-field--outlined .mat-mdc-form-field-infix {
+      padding: 10px 12px !important;
+      min-height: auto !important;
+      display: flex !important;
+      align-items: center !important;
+      height: 100% !important;
+      box-sizing: border-box !important;
+      justify-content: flex-start !important;
+    }
+
+    // Esconder labels do Material já que usamos labels HTML normais
+    .mat-mdc-form-field-label,
+    .mat-mdc-floating-label {
+      display: none !important;
+    }
+
+    // Select trigger (valor selecionado) - garantir alinhamento vertical CENTRALIZADO
+    .mat-mdc-select-trigger {
+      padding: 0 !important;
+      font-size: 14px !important;
+      color: var(--foreground) !important;
+      display: flex !important;
+      align-items: center !important;
+      height: 100% !important;
+      line-height: 1.5 !important;
+    }
+
+    .mat-mdc-select-value {
+      color: var(--foreground) !important;
+      display: flex !important;
+      align-items: center !important;
+      height: 100% !important;
+    }
+
+    .mat-mdc-select-value-text {
+      color: var(--foreground) !important;
+      line-height: 1.5 !important;
+      display: flex !important;
+      align-items: center !important;
+    }
+
+    .mat-mdc-select-placeholder {
+      color: var(--muted-foreground) !important;
+      line-height: 1.5 !important;
+      display: flex !important;
+      align-items: center !important;
+    }
+
+    // Seta do dropdown - tornar sempre visível
+    .mat-mdc-select-arrow-wrapper {
+      margin-left: 8px !important;
+
+      .mat-mdc-select-arrow {
+        color: var(--muted-foreground) !important;
+        opacity: 1 !important;
+      }
+    }
+
+    .mat-mdc-form-field-subscript-wrapper {
+      margin-top: 4px !important;
+    }
+
+    .mat-mdc-form-field-error-wrapper {
+      padding: 0 !important;
+    }
+
+    .mat-mdc-form-field-error {
+      font-size: 12px !important;
+      color: var(--destructive) !important;
+    }
+
+    // BORDAS DO OUTLINE - sempre visíveis usando classes MDC
+    .mdc-notched-outline {
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing {
+        border-color: var(--border) !important;
+        border-width: 1px !important;
+        opacity: 1 !important;
+      }
+    }
+
+    // Garantir visibilidade do outline sempre
+    .mat-mdc-text-field-wrapper .mat-mdc-form-field-outline {
+      display: block !important;
+      opacity: 1 !important;
+    }
+
+    // Hover - borda permanece cinza
+    .mat-mdc-form-field:hover .mdc-notched-outline {
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing {
+        border-color: var(--border) !important;
+        opacity: 1 !important;
+      }
+    }
+
+    // Foco - borda azul
+    .mat-mdc-form-field.mat-focused .mdc-notched-outline {
+      .mdc-notched-outline__leading,
+      .mdc-notched-outline__notch,
+      .mdc-notched-outline__trailing {
+        border-color: var(--primary) !important;
+        border-width: 1px !important;
+        opacity: 1 !important;
+      }
+    }
+
+    // Outro padrão de outline do Material
+    .mat-mdc-form-field-outline,
+    .mat-mdc-form-field-outline-thick {
+      opacity: 1 !important;
+
+      .mat-mdc-form-field-outline-start,
+      .mat-mdc-form-field-outline-gap,
+      .mat-mdc-form-field-outline-end {
+        border-color: var(--border) !important;
+        border-width: 1px !important;
+      }
+    }
+
+    .mat-mdc-form-field.mat-focused .mat-mdc-form-field-outline-thick {
+      .mat-mdc-form-field-outline-start,
+      .mat-mdc-form-field-outline-gap,
+      .mat-mdc-form-field-outline-end {
+        border-color: var(--primary) !important;
+      }
+    }
+
+    // Estilo do painel do select (dropdown)
+    .mat-mdc-select-panel {
+      border-radius: 8px !important;
+      border: none !important;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1) !important;
+      background: var(--card) !important;
+      padding: 4px 0 !important;
+      margin-top: 4px !important;
+
+      // Sobrescrever variáveis CSS do Material para forçar azul
+      --mat-option-selected-state-label-text-color: #2563EB !important;
+      --mat-option-selected-state-layer-color: #2563EB !important;
+      --mdc-list-list-item-selected-label-text-color: #2563EB !important;
+      --mdc-list-list-item-selected-container-fill-color: hsl(217, 92%, 95%) !important;
+    }
+
+    // Estilo dos itens do select - REDUZIR PADDING (menos largo)
+    .mat-mdc-option {
+      padding: 8px 12px !important; // Reduzido de 10px 16px para 8px 12px
+      font-size: 14px !important;
+      color: var(--foreground) !important;
+      min-height: auto !important;
+      height: auto !important;
+      transition: all 0.2s ease;
+      background: var(--card) !important;
+
+      // HOVER - background AZUL CLARO e texto AZUL ESCURO (como no mockup)
+      &:hover:not(.mdc-list-item--disabled):not(.mdc-list-item--selected) {
+        background: hsl(217, 92%, 95%) !important; // Azul claro - hover azul
+
+        .mdc-list-item__primary-text {
+          color: #2563EB !important; // Azul escuro no hover - como no mockup
+        }
+      }
+
+      &.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+        background: hsl(217, 92%, 95%) !important; // Azul claro - forçar cor azul
+        color: #2563EB !important; // Azul #2563EB - forçar cor azul explícito
+
+        // Sobrescrever variáveis CSS do Material - FORÇAR AZUL
+        --mat-option-selected-state-label-text-color: #2563EB !important;
+        --mat-option-selected-state-layer-color: #2563EB !important;
+        --mdc-list-list-item-selected-label-text-color: #2563EB !important;
+
+        // Remover QUALQUER cor roxa que possa estar vindo do Material
+        &, * {
+          color: #2563EB !important;
+        }
+
+        .mdc-list-item__primary-text {
+          color: #2563EB !important; // Azul #2563EB - forçar cor azul
+          font-weight: 500 !important;
+        }
+
+        // Remover estilo roxo do Material completamente
+        .mat-icon,
+        .mat-mdc-icon {
+          color: #2563EB !important;
+        }
+      }
+
+      .mdc-list-item__primary-text {
+        color: var(--foreground);
+      }
+    }
+
+    // Checkmark customizado - adicionar ✓ à ESQUERDA do item selecionado - FORÇAR AZUL #2563EB
+    .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) .mdc-list-item__primary-text {
+      position: relative;
+
+      &::before {
+        content: '✓' !important;
+        color: #2563EB !important; // AZUL #2563EB - forçar explícito
+        font-size: 16px !important; // Tamanho do ícone
+        font-weight: 600 !important;
+        margin-right: 8px !important;
+        display: inline-block !important;
+        position: relative !important;
+        line-height: 1 !important;
+      }
+    }
+
+    // Garantir que NENHUM ícone roxo apareça - remover checkmarks padrão do Material
+    .mat-mdc-option.mdc-list-item--selected {
+      .mdc-list-item__graphic,
+      .mat-mdc-option-icon,
+      .mat-icon,
+      .mat-mdc-icon,
+      svg {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+      }
+    }
+
+    // Remover QUALQUER estilo roxo do Material - forçar azul #2563EB em TUDO
+    .mat-mdc-option.mdc-list-item--selected {
+      .mdc-list-item__ripple {
+        background: transparent !important;
+      }
+
+      // Forçar azul #2563EB em TODOS os elementos, incluindo ::before (checkmark)
+      &, & *, & *::before, & *::after {
+        color: #2563EB !important;
+      }
+
+      // Especificamente o ::before (checkmark) - garantir azul
+      .mdc-list-item__primary-text::before {
+        color: #2563EB !important;
+      }
+    }
+
+    // Sobrescrever QUALQUER tema roxo do Material completamente
+    .mat-mdc-option.mat-primary,
+    .mat-mdc-option[class*="primary"] {
+      &.mdc-list-item--selected {
+        .mdc-list-item__primary-text,
+        .mdc-list-item__primary-text::before,
+        .mdc-list-item__primary-text::after {
+          color: #2563EB !important;
+        }
+      }
+    }
+
+    // Remover pseudo-checkbox padrão que pode ter cor roxa
+    .mat-mdc-option .mat-pseudo-checkbox.mat-pseudo-checkbox-checked,
+    .mat-mdc-option .mat-pseudo-checkbox {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
+
+    // Remove o pseudo-checkbox padrão do Material
+    .mat-mdc-option .mat-pseudo-checkbox {
+      display: none !important;
+    }
+  }
+}
+
+.error-message {
+  font-size: 12px;
+  color: var(--destructive);
+  margin-top: -4px;
+}
+
+.modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid var(--border);
+}
+
+.btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+
+  &.btn-cancel {
+    background: var(--card);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+
+    &:hover {
+      background: var(--accent);
+    }
+  }
+
+  &.btn-save {
+    background: hsl(217, 91%, 53%); // Azul similar ao mockup #3F51B5
+    color: var(--primary-foreground);
+
+    &:hover {
+      background: var(--primary-hover);
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .modal-container {
+    max-width: 100%;
+    max-height: 100vh;
+    border-radius: 16px 16px 0 0;
+    margin-top: auto;
+  }
+}

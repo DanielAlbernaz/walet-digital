@@ -1,0 +1,234 @@
+.cartao-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.cartao-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+
+  .header-left {
+    .page-title {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--foreground);
+      margin: 0 0 4px 0;
+    }
+
+    .page-subtitle {
+      font-size: 14px;
+      color: var(--muted-foreground);
+      margin: 0;
+    }
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+}
+
+.month-summary-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--primary-lighter);
+  border: 1px solid rgba(37, 99, 235, 0.3);
+  border-radius: 12px;
+
+  .summary-icon {
+    font-size: 20px;
+    color: var(--primary);
+  }
+
+  .summary-content {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+
+    .summary-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--muted-foreground);
+    }
+
+    .summary-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+  }
+}
+
+.installments-list {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+
+  @media (min-width: 768px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (min-width: 1200px) {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.installment-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+  transition: all 0.2s ease;
+
+  &:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06);
+  }
+}
+
+.installment-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+
+  .installment-info {
+    flex: 1;
+
+    .installment-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--foreground);
+      margin: 0 0 4px 0;
+    }
+
+    .installment-category {
+      font-size: 14px;
+      color: var(--muted-foreground);
+      margin: 0;
+    }
+  }
+
+  .installment-progress {
+    .progress-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary);
+      background: var(--primary-lighter);
+      padding: 6px 12px;
+      border-radius: 6px;
+    }
+  }
+}
+
+.installment-progress-section {
+  margin-bottom: 16px;
+
+  .progress-bar-container {
+    width: 100%;
+    height: 8px;
+    background: var(--muted);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 8px;
+
+    .progress-bar {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+  }
+
+  .installment-stats {
+    display: flex;
+    justify-content: space-between;
+
+    .stat-item {
+      .stat-label {
+        font-size: 12px;
+        color: var(--muted-foreground);
+      }
+    }
+  }
+}
+
+.installment-values {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+
+  .value-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+
+    .value-label {
+      font-size: 12px;
+      color: var(--muted-foreground);
+    }
+
+    .value-amount {
+      font-size: 16px;
+      font-weight: 600;
+
+      &.monthly {
+        color: var(--destructive);
+      }
+
+      &.total {
+        color: var(--foreground);
+      }
+    }
+  }
+}
+
+.installment-due-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: var(--muted);
+  border-radius: 8px;
+
+  .calendar-icon {
+    font-size: 16px;
+    color: var(--muted-foreground);
+  }
+
+  .due-date-text {
+    font-size: 12px;
+    color: var(--muted-foreground);
+
+    .due-date-bold {
+      font-weight: 500;
+      color: var(--foreground);
+    }
+  }
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+
+  .empty-text {
+    font-size: 14px;
+    color: var(--muted-foreground);
+    margin: 0;
+  }
+}

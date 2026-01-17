@@ -1,0 +1,17 @@
+<div class="dashboard-layout">
+  <app-navbar
+    [walletBalance]="7800.00"
+    (toggleSidebar)="onToggleSidebar()">
+  </app-navbar>
+
+  <div class="dashboard-content-wrapper">
+    <app-sidebar
+      [isOpen]="sidebarOpen"
+      (toggle)="onToggleSidebar()">
+    </app-sidebar>
+
+    <main class="main-content">
+      <ng-content></ng-content>
+    </main>
+  </div>
+</div>

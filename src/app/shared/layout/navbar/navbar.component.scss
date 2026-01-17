@@ -1,0 +1,211 @@
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px 0 24px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+
+  @media (min-width: 1200px) {
+    padding: 0 40px 0 32px;
+  }
+
+  .navbar-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .menu-toggle {
+      color: var(--foreground);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .logo-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        background: var(--primary);
+        color: var(--primary-foreground);
+
+        fa-icon {
+          font-size: 20px;
+        }
+      }
+
+      .logo-text {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--foreground);
+
+        .logo-text-primary {
+          color: var(--primary);
+        }
+      }
+    }
+  }
+
+  .navbar-right {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    flex-shrink: 0;
+
+    .balance-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 16px;
+      border-radius: 12px;
+      background: var(--primary-lighter);
+      white-space: nowrap;
+
+      .balance-icon {
+        color: var(--primary);
+        font-size: 16px;
+      }
+
+      .balance-label {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--muted-foreground);
+      }
+
+      .balance-value {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--success);
+
+        &.negative {
+          color: var(--destructive);
+        }
+      }
+    }
+
+    .user-menu-button {
+      display: flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      gap: 10px;
+      padding: 4px 8px;
+      flex-shrink: 0;
+      white-space: nowrap;
+      line-height: 1;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: inherit;
+      font-family: inherit;
+      font-size: inherit;
+
+      .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: var(--primary-foreground);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        font-weight: 600;
+        border: 2px solid rgba(37, 99, 235, 0.2);
+        flex-shrink: 0;
+      }
+
+      .user-name {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--foreground);
+        white-space: nowrap;
+      }
+
+      .user-menu-arrow {
+        font-size: 14px;
+        color: var(--muted-foreground);
+        flex-shrink: 0;
+      }
+    }
+  }
+}
+
+::ng-deep .user-dropdown-menu {
+  background: var(--card) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1), 0 2px 6px rgba(0, 0, 0, 0.06) !important;
+
+  .mat-mdc-menu-panel {
+    background: var(--card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+  }
+
+  .mat-mdc-menu-content {
+    padding: 8px;
+    min-width: 192px;
+    background: var(--card) !important;
+  }
+
+  .mat-mdc-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    color: var(--foreground) !important;
+
+    .menu-icon {
+      font-size: 16px;
+      width: 16px;
+      color: var(--foreground) !important;
+    }
+
+    &:hover {
+      background: var(--muted) !important;
+    }
+
+    &.logout-item {
+      color: var(--destructive) !important;
+
+      .menu-icon {
+        color: var(--destructive) !important;
+      }
+
+      &:hover {
+        background: var(--destructive-light) !important;
+      }
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .navbar {
+    padding: 0 16px;
+
+    .navbar-right {
+      gap: 12px;
+
+      .balance-container {
+        padding: 8px 12px;
+        gap: 6px;
+      }
+
+      .user-menu-button {
+        padding: 4px 6px;
+        gap: 6px;
+      }
+    }
+  }
+}

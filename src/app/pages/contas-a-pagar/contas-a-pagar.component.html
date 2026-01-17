@@ -1,0 +1,80 @@
+<app-dashboard-layout>
+  <div class="contas-page">
+    <!-- Header Section -->
+    <div class="contas-header">
+      <div class="header-left">
+        <h1 class="page-title">Contas a Pagar</h1>
+        <p class="page-subtitle">Organize suas contas pendentes do mês</p>
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-cards-grid">
+      <!-- Pendente Card -->
+      <div class="summary-card summary-card-pending">
+        <div class="card-header">
+          <fa-icon [icon]="faClock" class="card-icon"></fa-icon>
+          <span class="card-label">Pendente</span>
+        </div>
+        <p class="card-value">{{ formatCurrency(totalPending) }}</p>
+        <p class="card-count">{{ pendingBills.length }} conta(s)</p>
+      </div>
+
+      <!-- Pago Card -->
+      <div class="summary-card summary-card-paid">
+        <div class="card-header">
+          <fa-icon [icon]="faCheckCircle" class="card-icon"></fa-icon>
+          <span class="card-label">Pago</span>
+        </div>
+        <p class="card-value">{{ formatCurrency(totalPaid) }}</p>
+        <p class="card-count">{{ paidBills.length }} conta(s)</p>
+      </div>
+    </div>
+
+    <!-- Pending Bills List -->
+    <div class="pending-bills-card">
+      <div class="bills-header">
+        <h3 class="bills-title">Contas Pendentes</h3>
+      </div>
+
+      <div *ngIf="pendingBills.length === 0" class="empty-state">
+        <div class="empty-icon">
+          <fa-icon [icon]="faCheckCircle"></fa-icon>
+        </div>
+        <p class="empty-text">Todas as contas do mês estão pagas! 🎉</p>
+      </div>
+
+      <div *ngIf="pendingBills.length > 0" class="bills-list">
+        <div *ngFor="let bill of pendingBills" class="bill-item">
+          <div class="bill-item-left">
+            <div class="bill-icon" [ngClass]="getDateStatus(bill.date).class">
+              <fa-icon [icon]="getDateStatus(bill.date).icon"></fa-icon>
+            </div>
+            <div class="bill-info">
+              <p class="bill-description">{{ bill.description }}</p>
+              <p class="bill-meta">
+                {{ bill.category }}
+                <span *ngIf="bill.portion"> • Parcela {{ bill.portion }}</span>
+              </p>
+            </div>
+          </div>
+          <div class="bill-item-right">
+            <div class="bill-amount-section">
+              <span class="bill-amount">{{ formatCurrency(bill.value) }}</span>
+              <p class="bill-date-badge" [ngClass]="getDateStatus(bill.date).class">
+                {{ getDateStatus(bill.date).label }}
+              </p>
+            </div>
+            <button type="button" class="btn-pay" (click)="onPayBill(bill.id)">
+              Pagar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <app-floating-action-button (clicked)="onFabClick()"></app-floating-action-button>
+</app-dashboard-layout>
+
+<app-transaction-modal [isOpen]="isModalOpen" (close)="onCloseModal()"></app-transaction-modal>

@@ -1,0 +1,76 @@
+<app-dashboard-layout>
+  <div class="cartao-page">
+    <!-- Header Section -->
+    <div class="cartao-header">
+      <div class="header-left">
+        <h1 class="page-title">Cartão / Parcelas</h1>
+        <p class="page-subtitle">Acompanhe suas compras parceladas</p>
+      </div>
+      <div class="header-right">
+        <div class="month-summary-card">
+          <fa-icon [icon]="faCreditCard" class="summary-icon"></fa-icon>
+          <div class="summary-content">
+            <span class="summary-label">Este mês:</span>
+            <span class="summary-value">{{ formatCurrency(totalThisMonth) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Installments List -->
+    <div class="installments-list">
+      <div *ngFor="let installment of installments" class="installment-card">
+        <div class="installment-header">
+          <div class="installment-info">
+            <h3 class="installment-title">{{ installment.description }}</h3>
+            <p class="installment-category">{{ installment.category }}</p>
+          </div>
+          <div class="installment-progress">
+            <span class="progress-text">{{ installment.paidInstallments }}/{{ installment.totalInstallments }}</span>
+          </div>
+        </div>
+
+        <div class="installment-progress-section">
+          <div class="progress-bar-container">
+            <div class="progress-bar" [style.width.%]="getProgressPercentage(installment)"></div>
+          </div>
+          <div class="installment-stats">
+            <div class="stat-item">
+              <span class="stat-label">{{ installment.paidInstallments }} pagas</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">{{ getRemainingInstallments(installment) }} restantes</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="installment-values">
+          <div class="value-item">
+            <span class="value-label">Valor mensal</span>
+            <span class="value-amount monthly">{{ formatCurrency(installment.monthlyValue) }}</span>
+          </div>
+          <div class="value-item">
+            <span class="value-label">Valor total</span>
+            <span class="value-amount total">{{ formatCurrency(installment.totalValue) }}</span>
+          </div>
+        </div>
+
+        <div class="installment-due-date">
+          <fa-icon [icon]="faCalendar" class="calendar-icon"></fa-icon>
+          <span class="due-date-text">
+            Próximo vencimento: <span class="due-date-bold">{{ formatDate(installment.nextDueDate) }}</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="installments.length === 0" class="empty-state">
+      <p class="empty-text">Nenhuma compra parcelada encontrada.</p>
+    </div>
+  </div>
+
+  <app-floating-action-button (clicked)="onFabClick()"></app-floating-action-button>
+</app-dashboard-layout>
+
+<app-transaction-modal [isOpen]="isModalOpen" (close)="onCloseModal()"></app-transaction-modal>

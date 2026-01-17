@@ -1,40 +1,32 @@
 import { Injectable, inject } from '@angular/core';
-import { ActivatedRoute, ActivatedRouteSnapshot, CanActivateFn, Router, RouterStateSnapshot } from '@angular/router';
+import { ActivatedRouteSnapshot, CanActivateFn, Router, RouterStateSnapshot } from '@angular/router';
 import { Observable } from 'rxjs';
-import { UserService } from '../services/user/user.service';
+import { AuthService } from '../services/auth/auth.service';
 
 @Injectable({
   providedIn: 'root'
 })
-class AuthGuard {
+class AuthGuardService {
 
   constructor(
-    private userService: UserService,
-    private route: Router
+    private authService: AuthService,
+    private router: Router
   ) { }
 
   canActivate(
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
-  ) : Observable<boolean> | boolean {
-    // console.log('aqui')
-    if (this.userService.userIsAuthenticated()) {
-      console.log(this.userService.userIsAuthenticated())
-      console.log('foi auntenticado')
+  ): Observable<boolean> | boolean {
+    if (this.authService.isAuthenticated()) {
       return true;
     }
-    console.log('ta false')
-    // console.log('aqui')
-    // console.log(this.userService.userIsAuthenticated())
-    // console.log('aqui')
-    this.route.navigate(['login']);
 
+    // Redirecionar para login se não autenticado
+    this.router.navigate(['/login']);
     return false;
   }
-
 }
 
-export const IsAdminGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
-  console.log('aqui')
-  return inject(AuthGuard).canActivate(route, state)
+export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
+  return inject(AuthGuardService).canActivate(route, state);
 }

@@ -1,0 +1,89 @@
+.month-selector {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+
+  .selector-header {
+    .selector-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--foreground);
+      margin: 0 0 4px 0;
+    }
+
+    .selector-subtitle {
+      font-size: 14px;
+      color: var(--muted-foreground);
+      margin: 0;
+    }
+  }
+
+  .selector-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+
+    .control-button {
+      width: 28px;
+      height: 28px;
+      min-width: 28px;
+      border-radius: 6px;
+      background: transparent;
+      border: none;
+      color: var(--foreground);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+
+      fa-icon {
+        font-size: 14px;
+        color: var(--foreground);
+        transition: color 0.2s ease;
+      }
+
+      &:hover {
+        background: rgba(37, 99, 235, 0.08);
+
+        fa-icon {
+          color: var(--primary);
+        }
+      }
+    }
+
+    .month-button {
+      min-width: 160px;
+      text-transform: capitalize;
+      border-color: var(--border);
+      color: var(--foreground);
+      transition: color 0.2s ease;
+
+      .month-icon {
+        margin-right: 8px;
+        font-size: 16px;
+        color: var(--foreground);
+        transition: color 0.2s ease;
+      }
+
+      &:hover {
+        background: var(--accent);
+        color: var(--primary);
+
+        .month-icon {
+          color: var(--primary);
+        }
+      }
+    }
+  }
+}
+
+@media (max-width: 640px) {
+  .month-selector {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

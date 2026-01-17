@@ -1,0 +1,46 @@
+.fab-button {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 50;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px 0 rgba(37, 99, 235, 0.3);
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: var(--primary-hover);
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px 0 rgba(37, 99, 235, 0.4);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  .fab-icon {
+    font-size: 24px;
+    color: var(--primary-foreground);
+  }
+}
+
+@media (max-width: 640px) {
+  .fab-button {
+    bottom: 16px;
+    right: 16px;
+    width: 52px;
+    height: 52px;
+
+    .fab-icon {
+      font-size: 22px;
+    }
+  }
+}

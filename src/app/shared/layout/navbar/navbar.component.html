@@ -1,0 +1,55 @@
+<mat-toolbar class="navbar">
+  <div class="navbar-left">
+    <button
+      mat-icon-button
+      class="menu-toggle d-lg-none"
+      (click)="onToggleSidebar()"
+      aria-label="Toggle sidebar">
+      <fa-icon [icon]="faBars"></fa-icon>
+    </button>
+
+    <div class="logo-container">
+      <div class="logo-icon">
+        <fa-icon [icon]="faWallet"></fa-icon>
+      </div>
+      <span class="logo-text">
+        Finanças<span class="logo-text-primary">Pro</span>
+      </span>
+    </div>
+  </div>
+
+  <div class="navbar-right">
+    <div class="balance-container d-none d-sm-flex">
+      <fa-icon [icon]="faWallet" class="balance-icon"></fa-icon>
+      <span class="balance-label">Saldo:</span>
+      <span class="balance-value" [class.negative]="walletBalance < 0">
+        {{ formatCurrency(walletBalance) }}
+      </span>
+    </div>
+
+    <button
+      type="button"
+      [matMenuTriggerFor]="userMenu"
+      class="user-menu-button">
+      <div class="user-avatar">{{ getInitials(userName) }}</div>
+      <span class="user-name d-none d-md-inline">{{ userName }}</span>
+      <fa-icon [icon]="faChevronDown" class="user-menu-arrow"></fa-icon>
+    </button>
+
+    <mat-menu #userMenu="matMenu" class="user-dropdown-menu">
+      <button mat-menu-item>
+        <fa-icon [icon]="faUser" class="menu-icon"></fa-icon>
+        <span>Perfil</span>
+      </button>
+      <button mat-menu-item>
+        <fa-icon [icon]="faCog" class="menu-icon"></fa-icon>
+        <span>Configurações</span>
+      </button>
+      <mat-divider></mat-divider>
+      <button mat-menu-item class="logout-item" (click)="logout()">
+        <fa-icon [icon]="faSignOutAlt" class="menu-icon"></fa-icon>
+        <span>Sair</span>
+      </button>
+    </mat-menu>
+  </div>
+</mat-toolbar>

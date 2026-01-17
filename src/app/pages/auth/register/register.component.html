@@ -29,6 +29,10 @@
 
     <!-- Register Form -->
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="register-form">
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="error-alert">
+        {{ errorMessage }}
+      </div>
       <!-- Name Field -->
       <div class="form-group">
         <label for="name" class="form-label">Nome</label>

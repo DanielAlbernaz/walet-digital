@@ -1,0 +1,42 @@
+<div class="upcoming-bills">
+  <div class="bills-header">
+    <fa-icon [icon]="faCalendar" class="header-icon"></fa-icon>
+    <h3 class="header-title">Contas Próximas do Vencimento</h3>
+  </div>
+
+  <div *ngIf="bills.length === 0" class="empty-state">
+    <div class="empty-icon-wrapper">
+      <fa-icon [icon]="faCalendar" class="empty-icon"></fa-icon>
+    </div>
+    <p class="empty-text">Nenhuma conta pendente! 🎉</p>
+  </div>
+
+  <div *ngIf="bills.length > 0" class="bills-list">
+    <div 
+      *ngFor="let bill of bills"
+      class="bill-item">
+      
+      <div class="bill-info">
+        <fa-icon 
+          *ngIf="isPast(bill.date)"
+          [icon]="faExclamationTriangle" 
+          class="bill-warning-icon">
+        </fa-icon>
+        <div class="bill-details">
+          <p class="bill-description">{{ bill.description }}</p>
+          <p class="bill-category">
+            {{ bill.category }}
+            <span *ngIf="bill.portion"> • {{ bill.portion }}</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="bill-value-section">
+        <span class="bill-value">{{ formatCurrency(bill.value) }}</span>
+        <span class="date-badge" [class]="getDateClass(bill.date)">
+          {{ getDateLabel(bill.date) }}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

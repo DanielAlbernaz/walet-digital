@@ -1,0 +1,343 @@
+.receitas-page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.receitas-header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @media (min-width: 640px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.header-left {
+  .page-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 0 0 4px 0;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
+    color: var(--muted-foreground);
+    margin: 0;
+  }
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.month-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  .control-button {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+    border-radius: 6px;
+    background: transparent;
+    border: none;
+    color: var(--foreground);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+
+    fa-icon {
+      font-size: 14px;
+      color: var(--foreground);
+      transition: color 0.2s ease;
+    }
+
+    &:hover {
+      background: rgba(37, 99, 235, 0.08);
+
+      fa-icon {
+        color: var(--primary);
+      }
+    }
+  }
+
+  .month-button {
+    min-width: 180px;
+    padding: 8px 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--muted);
+    color: var(--foreground);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+
+    .month-icon {
+      font-size: 16px;
+      color: var(--foreground);
+      transition: color 0.2s ease;
+    }
+
+    &:hover {
+      background: var(--accent);
+      border-color: var(--primary);
+      color: var(--primary);
+
+      .month-icon {
+        color: var(--primary);
+      }
+    }
+  }
+}
+
+.total-income-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  background: var(--success-light);
+
+  .total-icon {
+    font-size: 20px;
+    color: var(--success);
+  }
+
+  .total-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted-foreground);
+  }
+
+  .total-value {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--success);
+  }
+}
+
+.search-filter-bar {
+  display: flex;
+  gap: 8px;
+}
+
+.search-input-wrapper {
+  position: relative;
+  flex: 1;
+
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted-foreground);
+    font-size: 16px;
+    pointer-events: none;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 10px 12px 10px 40px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--foreground);
+    background: var(--card);
+    transition: all 0.2s ease;
+
+    &::placeholder {
+      color: var(--muted-foreground);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+  }
+}
+
+.filter-button {
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  color: var(--foreground);
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  fa-icon {
+    font-size: 16px;
+  }
+
+  &:hover {
+    background: var(--accent);
+    border-color: var(--primary);
+  }
+}
+
+.income-list-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+
+  .empty-icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--success-light);
+    margin-bottom: 16px;
+
+    fa-icon {
+      font-size: 32px;
+      color: var(--success);
+    }
+  }
+
+  .empty-text {
+    font-size: 14px;
+    color: var(--muted-foreground);
+    margin: 0 0 16px 0;
+  }
+
+  .btn-add-income {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--foreground);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    fa-icon {
+      font-size: 16px;
+    }
+
+    &:hover {
+      background: var(--accent);
+    }
+  }
+}
+
+.income-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.income-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  transition: background-color 0.2s ease;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: var(--muted);
+  }
+}
+
+.income-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.income-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--success-light);
+
+  fa-icon {
+    font-size: 16px;
+    color: var(--success);
+  }
+}
+
+.income-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .income-description {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--foreground);
+    margin: 0;
+  }
+
+  .income-meta {
+    font-size: 12px;
+    color: var(--muted-foreground);
+    margin: 0;
+  }
+}
+
+.income-item-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+
+  .income-value {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--success);
+  }
+
+  .income-status {
+    font-size: 12px;
+    color: var(--muted-foreground);
+    margin: 0;
+
+    &.status-paid {
+      color: var(--success);
+    }
+  }
+}

@@ -4,6 +4,13 @@ import { AppComponent } from './app.component';
 import { LoginComponent } from './pages/auth/login/login.component';
 import { RegisterComponent } from './pages/auth/register/register.component';
 import { ForgotPasswordComponent } from './pages/auth/forgot-password/forgot-password.component';
+import { DashboardPageComponent } from './pages/dashboard/dashboard.component';
+import { ReceitasComponent } from './pages/receitas/receitas.component';
+import { DespesasComponent } from './pages/despesas/despesas.component';
+import { ContasAPagarComponent } from './pages/contas-a-pagar/contas-a-pagar.component';
+import { CartaoParcelasComponent } from './pages/cartao-parcelas/cartao-parcelas.component';
+import { ConfiguracoesComponent } from './pages/configuracoes/configuracoes.component';
+import { authGuard } from './guards/auth.guard';
 
 const routes: Routes = [
   {
@@ -22,6 +29,36 @@ const routes: Routes = [
   {
     path: 'forgot-password',
     component: ForgotPasswordComponent
+  },
+  {
+    path: 'dashboard',
+    component: DashboardPageComponent,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'receitas',
+    component: ReceitasComponent,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'despesas',
+    component: DespesasComponent,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'contas',
+    component: ContasAPagarComponent,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'cartao-parcelas',
+    component: CartaoParcelasComponent,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'configuracoes',
+    component: ConfiguracoesComponent,
+    canActivate: [authGuard]
   },
   {
     path: '**',
