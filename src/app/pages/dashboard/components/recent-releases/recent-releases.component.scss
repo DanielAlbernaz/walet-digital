@@ -67,10 +67,13 @@
   background: var(--background);
   padding: 16px;
   transition: all 0.2s ease;
+  cursor: pointer;
 
   &:hover {
-    border-color: var(--border);
-    box-shadow: 0 1px 2px 0 rgba(217, 33%, 17%, 0.05);
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background: var(--card);
+    transform: translateY(-2px);
   }
 
   .release-info {
@@ -79,11 +82,14 @@
     gap: 12px;
 
     .release-icon-wrapper {
-      border-radius: 8px;
-      padding: 8px;
+      border-radius: 50%; // Circular conforme mockup
+      width: 36px;
+      height: 36px;
+      padding: 0;
       display: flex;
       align-items: center;
       justify-content: center;
+      flex-shrink: 0;
 
       &.income {
         background: var(--success-light);
@@ -97,11 +103,11 @@
         font-size: 16px;
 
         &.icon-income {
-          color: var(--success);
+          color: var(--success) !important;
         }
 
         &.icon-expense {
-          color: var(--destructive);
+          color: var(--destructive) !important;
         }
       }
     }
@@ -128,13 +134,14 @@
       display: block;
       font-weight: 600;
       margin-bottom: 4px;
+      font-size: 16px;
 
       &.value-income {
-        color: var(--success);
+        color: var(--success) !important;
       }
 
       &.value-expense {
-        color: var(--destructive);
+        color: var(--destructive) !important;
       }
     }
 

@@ -95,4 +95,8 @@
   <app-floating-action-button *appPermission="'create'" (clicked)="onFabClick()"></app-floating-action-button>
 </app-dashboard-layout>
 
-<app-transaction-modal [isOpen]="isModalOpen" (close)="onCloseModal()"></app-transaction-modal>
+<app-transaction-modal 
+  [isOpen]="isModalOpen" 
+  (close)="onCloseModal()"
+  (saved)="onTransactionSaved()">
+</app-transaction-modal>

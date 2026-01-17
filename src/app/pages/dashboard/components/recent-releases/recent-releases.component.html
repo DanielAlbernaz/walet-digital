@@ -12,16 +12,17 @@
   </div>
 
   <div *ngIf="releases.length > 0" class="releases-list">
-    <div 
+    <div
       *ngFor="let release of releases"
-      class="release-item">
-      
+      class="release-item"
+      (click)="onReleaseClick(release)">
+
       <div class="release-info">
-        <div 
+        <div
           class="release-icon-wrapper"
           [class.income]="isIncome(release)"
           [class.expense]="!isIncome(release)">
-          <fa-icon 
+          <fa-icon
             [icon]="isIncome(release) ? faArrowTrendUp : faArrowTrendDown"
             class="release-icon"
             [class.icon-income]="isIncome(release)"
@@ -38,7 +39,7 @@
       </div>
 
       <div class="release-value-section">
-        <span 
+        <span
           class="release-value"
           [class.value-income]="isIncome(release)"
           [class.value-expense]="!isIncome(release)">

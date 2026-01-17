@@ -2,7 +2,7 @@
   <div class="modal-container" (click)="$event.stopPropagation()">
     <!-- Modal Header -->
     <div class="modal-header">
-      <h2 class="modal-title">Novo Lançamento</h2>
+      <h2 class="modal-title">{{ releaseToEdit ? 'Editar Lançamento' : 'Novo Lançamento' }}</h2>
       <button type="button" class="modal-close-button" (click)="onClose()" aria-label="Fechar">
         <fa-icon [icon]="faTimes"></fa-icon>
       </button>
@@ -10,6 +10,11 @@
 
     <!-- Modal Body -->
     <div class="modal-body">
+      <!-- Error Message -->
+      <div *ngIf="errorMessage" class="error-alert">
+        {{ errorMessage }}
+      </div>
+
       <form [formGroup]="transactionForm" class="transaction-form">
         <!-- Tipo -->
         <div class="form-group">
@@ -42,6 +47,8 @@
             formControlName="value"
             class="form-input"
             placeholder="0,00"
+            (input)="onValueInput($event)"
+            (blur)="onValueBlur()"
             [class.input-error]="transactionForm.get('value')?.invalid && transactionForm.get('value')?.touched">
           <span class="error-message" *ngIf="getFieldError('value')">{{ getFieldError('value') }}</span>
         </div>
@@ -86,12 +93,30 @@
               formControlName="category"
               placeholder=""
               [class.input-error]="transactionForm.get('category')?.invalid && transactionForm.get('category')?.touched">
-              <mat-option *ngFor="let category of categories" [value]="category">
-                {{ category }}
+              <mat-option *ngIf="isLoadingCategories" disabled>
+                Carregando categorias...
+              </mat-option>
+              <mat-option *ngFor="let category of filteredCategories" [value]="category.id">
+                {{ category.title }}
               </mat-option>
             </mat-select>
             <mat-error *ngIf="transactionForm.get('category')?.invalid && transactionForm.get('category')?.touched">
               {{ getFieldError('category') }}
+            </mat-error>
+          </mat-form-field>
+        </div>
+
+        <!-- Status -->
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <mat-form-field appearance="outline" class="custom-form-field">
+            <mat-select formControlName="status" placeholder="">
+              <mat-option *ngFor="let option of statusOptions" [value]="option.value">
+                {{ option.label }}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="transactionForm.get('status')?.invalid && transactionForm.get('status')?.touched">
+              {{ getFieldError('status') }}
             </mat-error>
           </mat-form-field>
         </div>
@@ -136,8 +161,11 @@
 
     <!-- Modal Footer -->
     <div class="modal-footer">
-      <button type="button" class="btn btn-cancel" (click)="onClose()">Cancelar</button>
-      <button type="button" class="btn btn-save" (click)="onSave()">Salvar</button>
+      <button type="button" class="btn btn-cancel" (click)="onClose()" [disabled]="isLoading">Cancelar</button>
+      <button type="button" class="btn btn-save" (click)="onSave()" [disabled]="isLoading || transactionForm.invalid">
+        <span *ngIf="isLoading">Salvando...</span>
+        <span *ngIf="!isLoading">Salvar</span>
+      </button>
     </div>
   </div>
 </div>

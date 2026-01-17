@@ -1,5 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { faArrowTrendDown, faSearch, faFilter } from '@fortawesome/free-solid-svg-icons';
+import { FinancialReleaseService } from '../../services/financial-release/financial-release.service';
+import { FinancialRelease, Category } from '../../models/financial-release';
 
 export interface Expense {
   id: string;
@@ -16,41 +19,73 @@ export interface Expense {
   templateUrl: './despesas.component.html',
   styleUrls: ['./despesas.component.scss']
 })
-export class DespesasComponent {
+export class DespesasComponent implements OnInit {
   searchQuery: string = '';
   isModalOpen: boolean = false;
+  isLoading: boolean = false;
+
+  financialReleases: FinancialRelease[] = [];
+  categoriesMap: Map<number, string> = new Map();
 
   faArrowTrendDown = faArrowTrendDown;
   faSearch = faSearch;
   faFilter = faFilter;
 
-  expenses: Expense[] = [
-    {
-      id: '1',
-      description: 'Aluguel',
-      category: 'Aluguel',
-      value: 1500.00,
-      date: '2026-01-17',
-      is_paid: true,
-    },
-    {
-      id: '2',
-      description: 'Netflix + Spotify + iCloud',
-      category: 'Contas Fixas',
-      value: 450.00,
-      date: '2026-01-17',
-      is_paid: false,
-    },
-    {
-      id: '3',
-      description: 'iPhone 15 - Parcela',
-      category: 'Cartão de Crédito',
-      value: 299.90,
-      date: '2026-01-17',
-      is_paid: false,
-      portion: '3/12',
-    },
-  ];
+  expenses: Expense[] = [];
+
+  constructor(
+    private financialReleaseService: FinancialReleaseService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadData();
+  }
+
+  loadData(): void {
+    this.isLoading = true;
+    
+    forkJoin({
+      categories: this.financialReleaseService.getCategories(),
+      releases: this.financialReleaseService.getFinancialReleases()
+    }).subscribe({
+      next: ({ categories, releases }) => {
+        // Processar categorias primeiro
+        this.categoriesMap.clear();
+        categories.forEach(cat => {
+          this.categoriesMap.set(cat.id, cat.title);
+        });
+        
+        // Depois processar lançamentos
+        this.financialReleases = releases;
+        this.processExpenses(releases);
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Erro ao carregar dados:', error);
+        this.isLoading = false;
+        this.expenses = [];
+      }
+    });
+  }
+
+  private processExpenses(releases: FinancialRelease[]): void {
+    // Filtrar apenas despesas
+    const expenseReleases = releases.filter(r => r.type === 'despesa');
+    
+    this.expenses = expenseReleases.map(release => ({
+      id: String(release.id),
+      description: release.descrition || 'Sem descrição',
+      category: this.getCategoryName(release.category_id),
+      value: parseFloat(String(release.value)),
+      date: release.date,
+      is_paid: release.status ? release.status === 'paid' : !!release.payment_date,
+      portion: release.portion || undefined
+    }));
+  }
+
+  private getCategoryName(categoryId: number): string {
+    return this.categoriesMap.get(categoryId) || 'Outros';
+  }
 
   get filteredExpenses(): Expense[] {
     if (!this.searchQuery) {
@@ -89,5 +124,9 @@ export class DespesasComponent {
 
   onCloseModal(): void {
     this.isModalOpen = false;
+  }
+
+  onTransactionSaved(): void {
+    this.loadData();
   }
 }

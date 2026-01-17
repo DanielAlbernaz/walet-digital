@@ -1,5 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { faArrowTrendUp, faSearch, faFilter, faChevronLeft, faChevronRight, faCalendar } from '@fortawesome/free-solid-svg-icons';
+import { FinancialReleaseService } from '../../services/financial-release/financial-release.service';
+import { FinancialRelease, Category } from '../../models/financial-release';
 
 export interface Income {
   id: string;
@@ -15,10 +18,14 @@ export interface Income {
   templateUrl: './receitas.component.html',
   styleUrls: ['./receitas.component.scss']
 })
-export class ReceitasComponent {
+export class ReceitasComponent implements OnInit {
   searchQuery: string = '';
   isModalOpen: boolean = false;
-  selectedMonth: Date = new Date(2026, 0, 1); // Janeiro 2026
+  selectedMonth: Date = new Date(); // Mês atual
+  isLoading: boolean = false;
+
+  financialReleases: FinancialRelease[] = [];
+  categoriesMap: Map<number, string> = new Map();
 
   faArrowTrendUp = faArrowTrendUp;
   faSearch = faSearch;
@@ -27,40 +34,60 @@ export class ReceitasComponent {
   faChevronRight = faChevronRight;
   faCalendar = faCalendar;
 
-  incomes: Income[] = [
-    {
-      id: '1',
-      description: 'Salário',
-      category: 'Salário',
-      value: 8500.00,
-      date: '2026-01-17',
-      is_paid: true,
-    },
-    {
-      id: '2',
-      description: 'Projeto Freelance',
-      category: 'Freelance',
-      value: 1500.00,
-      date: '2026-01-17',
-      is_paid: true,
-    },
-    {
-      id: '3',
-      description: 'Salário',
-      category: 'Salário',
-      value: 8500.00,
-      date: '2026-02-17',
-      is_paid: true,
-    },
-    {
-      id: '4',
-      description: 'Projeto Freelance',
-      category: 'Freelance',
-      value: 2000.00,
-      date: '2026-02-20',
-      is_paid: true,
-    },
-  ];
+  incomes: Income[] = [];
+
+  constructor(
+    private financialReleaseService: FinancialReleaseService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadData();
+  }
+
+  loadData(): void {
+    this.isLoading = true;
+    
+    forkJoin({
+      categories: this.financialReleaseService.getCategories(),
+      releases: this.financialReleaseService.getFinancialReleases()
+    }).subscribe({
+      next: ({ categories, releases }) => {
+        // Processar categorias primeiro
+        this.categoriesMap.clear();
+        categories.forEach(cat => {
+          this.categoriesMap.set(cat.id, cat.title);
+        });
+        
+        // Depois processar lançamentos
+        this.financialReleases = releases;
+        this.processIncomes(releases);
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Erro ao carregar dados:', error);
+        this.isLoading = false;
+        this.incomes = [];
+      }
+    });
+  }
+
+  private processIncomes(releases: FinancialRelease[]): void {
+    // Filtrar apenas receitas
+    const incomeReleases = releases.filter(r => r.type === 'receita');
+    
+    this.incomes = incomeReleases.map(release => ({
+      id: String(release.id),
+      description: release.descrition || 'Sem descrição',
+      category: this.getCategoryName(release.category_id),
+      value: parseFloat(String(release.value)),
+      date: release.date,
+      is_paid: release.status ? release.status === 'paid' : !!release.payment_date
+    }));
+  }
+
+  private getCategoryName(categoryId: number): string {
+    return this.categoriesMap.get(categoryId) || 'Outros';
+  }
 
   getMonthYear(): string {
     const months = [
@@ -140,5 +167,9 @@ export class ReceitasComponent {
 
   onCloseModal(): void {
     this.isModalOpen = false;
+  }
+
+  onTransactionSaved(): void {
+    this.loadData();
   }
 }

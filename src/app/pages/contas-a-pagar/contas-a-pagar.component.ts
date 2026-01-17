@@ -1,5 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
+import { forkJoin } from 'rxjs';
 import { faClock, faCheckCircle, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import { FinancialReleaseService } from '../../services/financial-release/financial-release.service';
+import { FinancialRelease, Category } from '../../models/financial-release';
 
 export interface Bill {
   id: string;
@@ -16,40 +19,71 @@ export interface Bill {
   templateUrl: './contas-a-pagar.component.html',
   styleUrls: ['./contas-a-pagar.component.scss']
 })
-export class ContasAPagarComponent {
+export class ContasAPagarComponent implements OnInit {
   isModalOpen: boolean = false;
+  isLoading: boolean = false;
 
   faClock = faClock;
   faCheckCircle = faCheckCircle;
   faExclamationTriangle = faExclamationTriangle;
 
-  bills: Bill[] = [
-    {
-      id: '1',
-      description: 'Netflix + Spotify + iCloud',
-      category: 'Contas Fixas',
-      value: 450.00,
-      date: new Date().toISOString().split('T')[0], // Hoje
-      is_paid: false,
-    },
-    {
-      id: '2',
-      description: 'iPhone 15 - Parcela',
-      category: 'Cartão de Crédito',
-      value: 299.90,
-      date: new Date().toISOString().split('T')[0], // Hoje
-      is_paid: false,
-      portion: '3/12',
-    },
-    {
-      id: '3',
-      description: 'Aluguel',
-      category: 'Aluguel',
-      value: 2200.00,
-      date: '2026-01-10', // Data passada - já pago
-      is_paid: true,
-    },
-  ];
+  financialReleases: FinancialRelease[] = [];
+  categoriesMap: Map<number, string> = new Map();
+  bills: Bill[] = [];
+
+  constructor(
+    private financialReleaseService: FinancialReleaseService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadData();
+  }
+
+  loadData(): void {
+    this.isLoading = true;
+    
+    forkJoin({
+      categories: this.financialReleaseService.getCategories(),
+      releases: this.financialReleaseService.getFinancialReleases()
+    }).subscribe({
+      next: ({ categories, releases }) => {
+        // Processar categorias primeiro
+        this.categoriesMap.clear();
+        categories.forEach(cat => {
+          this.categoriesMap.set(cat.id, cat.title);
+        });
+        
+        // Depois processar lançamentos
+        this.financialReleases = releases;
+        this.processBills(releases);
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Erro ao carregar dados:', error);
+        this.isLoading = false;
+        this.bills = [];
+      }
+    });
+  }
+
+  private processBills(releases: FinancialRelease[]): void {
+    // Filtrar apenas despesas
+    const expenseReleases = releases.filter(r => r.type === 'despesa');
+    
+    this.bills = expenseReleases.map(release => ({
+      id: String(release.id),
+      description: release.descrition || 'Sem descrição',
+      category: this.getCategoryName(release.category_id),
+      value: parseFloat(String(release.value)),
+      date: release.date, // Sempre usar a data de vencimento/competência
+      is_paid: release.status ? release.status === 'paid' : !!release.payment_date,
+      portion: release.portion || undefined
+    }));
+  }
+
+  private getCategoryName(categoryId: number): string {
+    return this.categoriesMap.get(categoryId) || 'Outros';
+  }
 
   get pendingBills(): Bill[] {
     return this.bills.filter(bill => !bill.is_paid);
@@ -126,11 +160,39 @@ export class ContasAPagarComponent {
   }
 
   onPayBill(billId: string): void {
-    // TODO: Implementar lógica de pagamento
-    console.log('Pagar conta:', billId);
     const bill = this.bills.find(b => b.id === billId);
-    if (bill) {
-      bill.is_paid = true;
-    }
+    if (!bill) return;
+
+    const releaseId = parseInt(billId);
+    const release = this.financialReleases.find(r => r.id === releaseId);
+    if (!release) return;
+
+    // Atualizar payment_date para hoje
+    const today = new Date().toISOString().split('T')[0];
+    
+    this.financialReleaseService.updateFinancialRelease(releaseId, {
+      type: release.type,
+      value: release.value,
+      date: release.date,
+      payment_date: today,
+      descrition: release.descrition,
+      observation: release.observation,
+      repetition: release.repetition,
+      portion: release.portion,
+      category_id: release.category_id
+    }).subscribe({
+      next: () => {
+        // Recarregar dados após atualizar
+        this.loadData();
+      },
+      error: (error) => {
+        console.error('Erro ao marcar conta como paga:', error);
+        alert('Erro ao marcar conta como paga. Tente novamente.');
+      }
+    });
+  }
+
+  onTransactionSaved(): void {
+    this.loadData();
   }
 }

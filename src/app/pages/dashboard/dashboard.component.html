@@ -10,11 +10,19 @@
 
     <div class="dashboard-grid">
       <app-upcoming-bills [bills]="upcomingBills"></app-upcoming-bills>
-      <app-recent-releases [releases]="recentReleases"></app-recent-releases>
+      <app-recent-releases
+        [releases]="recentReleases"
+        (releaseClick)="onReleaseClick($event)">
+      </app-recent-releases>
     </div>
   </div>
 
   <app-floating-action-button *appPermission="'create'" (clicked)="onFabClick()"></app-floating-action-button>
 </app-dashboard-layout>
 
-<app-transaction-modal [isOpen]="isModalOpen" (close)="onCloseModal()"></app-transaction-modal>
+<app-transaction-modal
+  [isOpen]="isModalOpen"
+  [releaseToEdit]="selectedRelease"
+  (close)="onCloseModal()"
+  (saved)="onTransactionSaved()">
+</app-transaction-modal>
