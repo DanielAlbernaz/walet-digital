@@ -10,7 +10,10 @@ import {
   faEnvelope,
   faTrash,
   faEdit,
-  faLock
+  faLock,
+  faCopy,
+  faCheck,
+  faLock as faLockIcon
 } from '@fortawesome/free-solid-svg-icons';
 import { AuthService } from '../../services/auth/auth.service';
 import { FinanceAccountService } from '../../services/finance-account/finance-account.service';
@@ -49,6 +52,9 @@ export class ConfiguracoesComponent implements OnInit {
   faTrash = faTrash;
   faEdit = faEdit;
   faLock = faLock;
+  faCopy = faCopy;
+  faCheck = faCheck;
+  faLockIcon = faLockIcon;
 
   users: FinanceAccountUser[] = [];
   invites: FinanceAccountInvite[] = [];
@@ -56,6 +62,7 @@ export class ConfiguracoesComponent implements OnInit {
   isLoadingUsers: boolean = false;
   showUpgradeModal: boolean = false;
   showInviteModal: boolean = false;
+  copiedInviteId: number | null = null;
 
   constructor(
     private authService: AuthService,
@@ -187,6 +194,41 @@ export class ConfiguracoesComponent implements OnInit {
   getCurrentUserId(): number | null {
     const user = this.authService.getCurrentUser();
     return user?.id || null;
+  }
+
+  getFinanceAccountName(): string {
+    const financeAccount = this.authService.getCurrentFinanceAccount();
+    return financeAccount?.name || 'Minha Finança';
+  }
+
+  getInviteLink(invite: FinanceAccountInvite): string {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/register?invite=${invite.token}`;
+  }
+
+  copyInviteLink(invite: FinanceAccountInvite): void {
+    const link = this.getInviteLink(invite);
+    navigator.clipboard.writeText(link).then(() => {
+      this.copiedInviteId = invite.id;
+      setTimeout(() => {
+        this.copiedInviteId = null;
+      }, 2000);
+    }).catch((err) => {
+      console.error('Erro ao copiar link:', err);
+    });
+  }
+
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }).format(date);
+  }
+
+  isInviteCopied(inviteId: number): boolean {
+    return this.copiedInviteId === inviteId;
   }
 
 

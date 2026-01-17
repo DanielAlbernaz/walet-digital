@@ -53,6 +53,27 @@
           <h2 class="card-title">Usuários & Convites</h2>
         </div>
         <div class="settings-items">
+          <!-- Informações Gerais -->
+          <div class="info-section">
+            <div class="info-item">
+              <span class="info-label">Finança:</span>
+              <span class="info-value">{{ getFinanceAccountName() }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Plano:</span>
+              <span class="info-value">{{ getPlanName() }}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Uso:</span>
+              <span class="info-value">
+                {{ getTotalUsers() }} de {{ getMaxUsers() }} usuários
+                <span *ngIf="isUserLimitReached()" class="limit-badge-small">Limite atingido</span>
+              </span>
+            </div>
+          </div>
+
+          <div class="item-divider"></div>
+
           <!-- Lista de Usuários -->
           <div class="users-section">
             <h3 class="section-subtitle">Usuários</h3>
@@ -112,26 +133,54 @@
 
           <!-- Lista de Convites -->
           <div *ngIf="invites.length > 0" class="invites-section">
-            <h3 class="section-subtitle">Convites Pendentes</h3>
+            <h3 class="section-subtitle">Convites Enviados</h3>
             <div class="invites-list">
               <div *ngFor="let invite of invites" class="invite-item">
-                <div class="invite-info">
-                  <div class="invite-details">
-                    <p class="invite-email">{{ invite.email }}</p>
-                    <p class="invite-role">{{ invite.role }}</p>
+                <div class="invite-main-info">
+                  <div class="invite-info">
+                    <div class="invite-details">
+                      <p class="invite-email">{{ invite.email }}</p>
+                      <div class="invite-meta">
+                        <span class="invite-role-badge">{{ invite.role }}</span>
+                        <span class="invite-date" *ngIf="invite.created_at">Enviado em {{ formatDate(invite.created_at) }}</span>
+                      </div>
+                    </div>
+                    <span class="invite-status" [ngClass]="'status-' + getInviteStatus(invite).toLowerCase()">
+                      {{ getInviteStatus(invite) }}
+                    </span>
                   </div>
-                  <span class="invite-status" [ngClass]="'status-' + getInviteStatus(invite).toLowerCase()">
-                    {{ getInviteStatus(invite) }}
-                  </span>
+                  
+                  <!-- Link de Convite (Apenas Pendente) -->
+                  <div *ngIf="getInviteStatus(invite) === 'Pendente'" class="invite-link-section">
+                    <div class="invite-link-container">
+                      <input 
+                        type="text" 
+                        class="invite-link-input" 
+                        [value]="getInviteLink(invite)" 
+                        readonly>
+                      <button 
+                        type="button" 
+                        class="btn-copy-link"
+                        (click)="copyInviteLink(invite)"
+                        [title]="isInviteCopied(invite.id) ? 'Copiado!' : 'Copiar link'">
+                        <fa-icon *ngIf="!isInviteCopied(invite.id)" [icon]="faCopy"></fa-icon>
+                        <fa-icon *ngIf="isInviteCopied(invite.id)" [icon]="faCheck"></fa-icon>
+                        <span>{{ isInviteCopied(invite.id) ? 'Copiado' : 'Copiar' }}</span>
+                      </button>
+                    </div>
+                  </div>
                 </div>
-                <button 
-                  *ngIf="getInviteStatus(invite) === 'Pendente'"
-                  type="button" 
-                  class="btn-cancel-invite"
-                  (click)="onRemoveInvite(invite.id)"
-                  title="Cancelar convite">
-                  <fa-icon [icon]="faTrash"></fa-icon>
-                </button>
+                
+                <div class="invite-actions">
+                  <button 
+                    *ngIf="getInviteStatus(invite) === 'Pendente'"
+                    type="button" 
+                    class="btn-cancel-invite"
+                    (click)="onRemoveInvite(invite.id)"
+                    title="Cancelar convite">
+                    <fa-icon [icon]="faTrash"></fa-icon>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
