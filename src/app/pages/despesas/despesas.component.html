@@ -1,79 +1,54 @@
 <app-dashboard-layout>
+  <app-loading-overlay [isLoading]="isLoading"></app-loading-overlay>
+
   <div class="despesas-page">
     <!-- Header Section -->
-    <div class="despesas-header">
-      <div class="header-left">
-        <h1 class="page-title">Despesas</h1>
-        <p class="page-subtitle">Gerencie suas saídas financeiras</p>
-      </div>
-      <div class="header-right">
-        <div class="total-expense-card">
-          <fa-icon [icon]="faArrowTrendDown" class="total-icon"></fa-icon>
-          <span class="total-label">Total:</span>
-          <span class="total-value">{{ formatCurrency(totalExpenses) }}</span>
-        </div>
-      </div>
-    </div>
+    <app-financial-page-header
+      [title]="'Despesas'"
+      [subtitle]="'Gerencie suas saídas financeiras'"
+      [total]="totalExpenses"
+      [type]="'despesa'">
+    </app-financial-page-header>
+
+    <!-- Month Selector -->
+    <app-month-selector (monthChanged)="onMonthChanged($event)"></app-month-selector>
 
     <!-- Search and Filter Bar -->
-    <div class="search-filter-bar">
-      <div class="search-input-wrapper">
-        <fa-icon [icon]="faSearch" class="search-icon"></fa-icon>
-        <input
-          type="text"
-          class="search-input"
-          placeholder="Buscar despesas..."
-          [(ngModel)]="searchQuery">
-      </div>
-      <button type="button" class="filter-button">
-        <fa-icon [icon]="faFilter"></fa-icon>
-      </button>
+    <app-financial-search-bar
+      [placeholder]="'Buscar despesas...'"
+      [(searchQuery)]="searchQuery">
+    </app-financial-search-bar>
+
+    <!-- Empty States or List -->
+    <div *ngIf="hasNoExpensesInMonth">
+      <app-financial-empty-state
+        [type]="'despesa'"
+        [emptyStateType]="'no-items'"
+        (addClick)="onFabClick()">
+      </app-financial-empty-state>
     </div>
 
-    <!-- Expense List -->
-    <div class="expense-list-card">
-      <div *ngIf="filteredExpenses.length === 0" class="empty-state">
-        <div class="empty-icon">
-          <fa-icon [icon]="faArrowTrendDown"></fa-icon>
-        </div>
-        <p class="empty-text">Nenhuma despesa encontrada neste mês</p>
-        <button *appPermission="'create'" type="button" class="btn-add-expense" (click)="onFabClick()">
-          <fa-icon [icon]="faArrowTrendDown"></fa-icon>
-          Adicionar Despesa
-        </button>
-      </div>
-
-      <div *ngIf="filteredExpenses.length > 0" class="expense-list">
-        <div *ngFor="let expense of filteredExpenses" class="expense-item">
-          <div class="expense-item-left">
-            <div class="expense-icon">
-              <fa-icon [icon]="faArrowTrendDown"></fa-icon>
-            </div>
-            <div class="expense-info">
-              <p class="expense-description">{{ expense.description }}</p>
-              <p class="expense-meta">
-                {{ expense.category }}
-                <span *ngIf="expense.portion"> • Parcela {{ expense.portion }}</span>
-                • {{ formatDate(expense.date) }}
-              </p>
-            </div>
-          </div>
-          <div class="expense-item-right">
-            <span class="expense-value">-{{ formatCurrency(expense.value) }}</span>
-            <p class="expense-status" [class.status-paid]="expense.is_paid" [class.status-pending]="!expense.is_paid">
-              {{ expense.is_paid ? 'Pago' : 'Pendente' }}
-            </p>
-          </div>
-        </div>
-      </div>
+    <div *ngIf="searchHasNoResults">
+      <app-financial-empty-state
+        [type]="'despesa'"
+        [emptyStateType]="'no-results'">
+      </app-financial-empty-state>
     </div>
+
+    <app-financial-list
+      *ngIf="filteredExpenses.length > 0"
+      [items]="filteredExpenses"
+      [type]="'despesa'"
+      (itemClick)="onExpenseClick($event)">
+    </app-financial-list>
   </div>
 
   <app-floating-action-button *appPermission="'create'" (clicked)="onFabClick()"></app-floating-action-button>
 </app-dashboard-layout>
 
-<app-transaction-modal 
-  [isOpen]="isModalOpen" 
+<app-transaction-modal
+  [isOpen]="isModalOpen"
+  [releaseToEdit]="selectedRelease"
   (close)="onCloseModal()"
   (saved)="onTransactionSaved()">
 </app-transaction-modal>

@@ -1,0 +1,32 @@
+<div class="financial-list-card">
+  <div class="financial-list">
+    <div *ngFor="let item of items" class="financial-item" (click)="onItemClick(item)" [style.cursor]="'pointer'">
+      <div class="financial-item-left">
+        <div class="financial-icon" [class.icon-receita]="type === 'receita'" [class.icon-despesa]="type === 'despesa'">
+          <fa-icon [icon]="type === 'receita' ? faArrowTrendUp : faArrowTrendDown"></fa-icon>
+        </div>
+        <div class="financial-info">
+          <p class="financial-description">{{ item.description }}</p>
+          <p class="financial-meta">
+            {{ item.category }} • {{ formatDate(item.date) }}
+            <span *ngIf="getReleaseTypeTag(item)" [ngClass]="getReleaseTypeTag(item)?.class">
+              {{ getReleaseTypeTag(item)?.label }}
+            </span>
+          </p>
+        </div>
+      </div>
+      <div class="financial-item-right">
+        <span class="financial-value" [class.value-receita]="type === 'receita'" [class.value-despesa]="type === 'despesa'">
+          {{ type === 'receita' ? '+' : '-' }}{{ formatCurrency(item.value) }}
+        </span>
+        <span 
+          class="status-badge" 
+          [ngClass]="getStatusClass(item)"
+          [title]="getCancelTooltip(item)"
+          [attr.aria-label]="getCancelTooltip(item)">
+          {{ getStatusLabel(item) }}
+        </span>
+      </div>
+    </div>
+  </div>
+</div>

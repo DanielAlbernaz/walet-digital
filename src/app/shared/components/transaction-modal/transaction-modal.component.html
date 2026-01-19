@@ -10,12 +10,20 @@
 
     <!-- Modal Body -->
     <div class="modal-body">
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="modal-loading-overlay">
+        <div class="modal-loading-content">
+          <i class="fas fa-wallet modal-loading-icon"></i>
+          <p class="modal-loading-text">Carregando...</p>
+        </div>
+      </div>
+
       <!-- Error Message -->
       <div *ngIf="errorMessage" class="error-alert">
         {{ errorMessage }}
       </div>
 
-      <form [formGroup]="transactionForm" class="transaction-form">
+      <form [formGroup]="transactionForm" class="transaction-form" [style.opacity]="isLoading ? '0.5' : '1'" [style.pointer-events]="isLoading ? 'none' : 'auto'">
         <!-- Tipo -->
         <div class="form-group">
           <label class="form-label">Tipo</label>
@@ -64,13 +72,30 @@
           <span class="error-message" *ngIf="getFieldError('competenceDate')">{{ getFieldError('competenceDate') }}</span>
         </div>
 
-        <!-- Data de Pagamento (opcional) -->
+        <!-- Data de Vencimento -->
         <div class="form-group">
-          <label class="form-label">Data de Pagamento (opcional)</label>
+          <label class="form-label">Data de Vencimento</label>
+          <input
+            type="date"
+            formControlName="dueDate"
+            class="form-input"
+            [class.input-error]="transactionForm.get('dueDate')?.invalid && transactionForm.get('dueDate')?.touched">
+          <span class="error-message" *ngIf="getFieldError('dueDate')">{{ getFieldError('dueDate') }}</span>
+        </div>
+
+        <!-- Data de Pagamento -->
+        <div class="form-group">
+          <label class="form-label">
+            Data de Pagamento
+            <span *ngIf="transactionForm.get('status')?.value === 'paid'" class="required-asterisk">*</span>
+            <span *ngIf="transactionForm.get('status')?.value !== 'paid'" class="optional-label">(opcional)</span>
+          </label>
           <input
             type="date"
             formControlName="paymentDate"
-            class="form-input">
+            class="form-input"
+            [class.input-error]="transactionForm.get('paymentDate')?.invalid && transactionForm.get('paymentDate')?.touched">
+          <span class="error-message" *ngIf="getFieldError('paymentDate')">{{ getFieldError('paymentDate') }}</span>
         </div>
 
         <!-- Descrição -->
@@ -106,6 +131,26 @@
           </mat-form-field>
         </div>
 
+        <!-- Método de Pagamento -->
+        <div class="form-group">
+          <label class="form-label">Forma de Pagamento <span class="optional-label">(opcional)</span></label>
+          <mat-form-field appearance="outline" class="custom-form-field">
+            <mat-select formControlName="payment_method" placeholder="">
+              <mat-option [value]="null">Selecione uma forma de pagamento (opcional)</mat-option>
+              <mat-optgroup label="Métodos Padrão" *ngIf="defaultPaymentMethods.length > 0">
+                <mat-option *ngFor="let method of defaultPaymentMethods" [value]="method.id">
+                  {{ method.name }}
+                </mat-option>
+              </mat-optgroup>
+              <mat-optgroup label="Meus Métodos" *ngIf="customPaymentMethods.length > 0">
+                <mat-option *ngFor="let method of customPaymentMethods" [value]="method.id">
+                  {{ method.name }}
+                </mat-option>
+              </mat-optgroup>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
         <!-- Status -->
         <div class="form-group">
           <label class="form-label">Status</label>
@@ -134,16 +179,48 @@
         </div>
 
         <!-- Quantidade de Parcelas (mostrar apenas quando Parcelado estiver selecionado) -->
-        <div class="form-group" *ngIf="isParceladoSelected">
+        <div class="form-group" *ngIf="isInstallmentsSelected">
           <label class="form-label">Quantidade de Parcelas</label>
           <input
             type="number"
-            formControlName="installments"
+            formControlName="number_installments_repetition"
+            class="form-input"
+            placeholder="Ex: 12"
+            min="2"
+            max="240"
+            [class.input-error]="transactionForm.get('number_installments_repetition')?.invalid && transactionForm.get('number_installments_repetition')?.touched">
+          <span class="error-message" *ngIf="getFieldError('number_installments_repetition')">{{ getFieldError('number_installments_repetition') }}</span>
+          <small class="form-hint">O valor total será dividido igualmente entre as parcelas</small>
+        </div>
+
+        <!-- Campos para Recorrência (mostrar apenas quando Recorrente estiver selecionado) -->
+        <div *ngIf="isFixedSelected" class="form-group">
+          <label class="form-label">Número de Repetições</label>
+          <input
+            type="number"
+            formControlName="number_repetition"
             class="form-input"
             placeholder="Ex: 12"
             min="1"
-            [class.input-error]="transactionForm.get('installments')?.invalid && transactionForm.get('installments')?.touched">
-          <span class="error-message" *ngIf="getFieldError('installments')">{{ getFieldError('installments') }}</span>
+            max="240"
+            [class.input-error]="transactionForm.get('number_repetition')?.invalid && transactionForm.get('number_repetition')?.touched">
+          <span class="error-message" *ngIf="getFieldError('number_repetition')">{{ getFieldError('number_repetition') }}</span>
+        </div>
+
+        <div class="form-group" *ngIf="isFixedSelected">
+          <label class="form-label">Frequência</label>
+          <mat-form-field appearance="outline" class="custom-form-field">
+            <mat-select formControlName="periodicity" placeholder="">
+              <mat-option value="daily">Diário</mat-option>
+              <mat-option value="weekly">Semanal</mat-option>
+              <mat-option value="monthly">Mensal</mat-option>
+              <mat-option value="annual">Anual</mat-option>
+            </mat-select>
+            <mat-error *ngIf="transactionForm.get('periodicity')?.invalid && transactionForm.get('periodicity')?.touched">
+              {{ getFieldError('periodicity') }}
+            </mat-error>
+          </mat-form-field>
+          <small class="form-hint">O mesmo valor será repetido em cada lançamento</small>
         </div>
 
         <!-- Observação (opcional) -->
@@ -161,11 +238,39 @@
 
     <!-- Modal Footer -->
     <div class="modal-footer">
-      <button type="button" class="btn btn-cancel" (click)="onClose()" [disabled]="isLoading">Cancelar</button>
-      <button type="button" class="btn btn-save" (click)="onSave()" [disabled]="isLoading || transactionForm.invalid">
-        <span *ngIf="isLoading">Salvando...</span>
-        <span *ngIf="!isLoading">Salvar</span>
-      </button>
+      <div class="footer-left">
+        <!-- Botão Pagar (apenas quando estiver editando e não estiver pago) -->
+        <button
+          *ngIf="releaseToEdit && canPay"
+          type="button"
+          class="btn btn-pay"
+          (click)="onPay()"
+          [disabled]="isLoading"
+          aria-label="Pagar lançamento">
+          <span>Pagar</span>
+        </button>
+
+        <!-- Botão Excluir (soft delete) (apenas quando estiver editando e puder deletar) -->
+        <button
+          *ngIf="releaseToEdit && canDelete"
+          type="button"
+          class="btn btn-delete"
+          (click)="onDelete()"
+          [disabled]="isLoading"
+          aria-label="Excluir lançamento">
+          <fa-icon [icon]="faTrash"></fa-icon>
+        </button>
+      </div>
+
+      <div class="footer-actions">
+        <button type="button" class="btn btn-cancel" (click)="onClose()" [disabled]="isLoading">Fechar</button>
+        <button type="button" class="btn btn-save" (click)="onSave()" [disabled]="isLoading || transactionForm.invalid">
+          <span *ngIf="isLoading && !releaseToEdit">Salvando...</span>
+          <span *ngIf="isLoading && releaseToEdit">Salvando...</span>
+          <span *ngIf="!isLoading && !releaseToEdit">Salvar</span>
+          <span *ngIf="!isLoading && releaseToEdit">Salvar Alterações</span>
+        </button>
+      </div>
     </div>
   </div>
 </div>

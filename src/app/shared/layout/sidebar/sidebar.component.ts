@@ -9,7 +9,8 @@ import {
   faChartBar,
   faCog,
   faChevronLeft,
-  faChevronRight
+  faChevronRight,
+  faWallet
 } from '@fortawesome/free-solid-svg-icons';
 
 interface MenuItem {
@@ -34,6 +35,7 @@ export class SidebarComponent {
     { icon: faArrowTrendDown, label: 'Despesas', path: '/despesas' },
     { icon: faFileInvoice, label: 'Contas a Pagar', path: '/contas' },
     { icon: faCreditCard, label: 'Cartão / Parcelas', path: '/cartao-parcelas' },
+    { icon: faWallet, label: 'Métodos de Pagamento', path: '/metodos-pagamento' },
     { icon: faChartBar, label: 'Relatórios', path: '/relatorios', disabled: true },
     { icon: faCog, label: 'Configurações', path: '/configuracoes' },
   ];

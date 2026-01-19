@@ -1,102 +1,54 @@
 <app-dashboard-layout>
+  <app-loading-overlay [isLoading]="isLoading"></app-loading-overlay>
+
   <div class="receitas-page">
     <!-- Header Section -->
-    <div class="receitas-header">
-      <div class="header-left">
-        <h1 class="page-title">Receitas</h1>
-        <p class="page-subtitle">Gerencie suas entradas financeiras</p>
-      </div>
-      <div class="header-right">
-        <div class="total-income-card">
-          <fa-icon [icon]="faArrowTrendUp" class="total-icon"></fa-icon>
-          <span class="total-label">Total:</span>
-          <span class="total-value">{{ formatCurrency(totalIncome) }}</span>
-        </div>
-      </div>
-    </div>
+    <app-financial-page-header
+      [title]="'Receitas'"
+      [subtitle]="'Gerencie suas entradas financeiras'"
+      [total]="totalIncome"
+      [type]="'receita'">
+    </app-financial-page-header>
 
     <!-- Month Selector -->
-    <div class="month-selector">
-      <button
-        type="button"
-        class="control-button"
-        (click)="prevMonth()"
-        aria-label="Mês anterior">
-        <fa-icon [icon]="faChevronLeft"></fa-icon>
-      </button>
-
-      <button
-        type="button"
-        class="month-button"
-        (click)="currentMonthClick()">
-        <fa-icon [icon]="faCalendar" class="month-icon"></fa-icon>
-        {{ getMonthYear() }}
-      </button>
-
-      <button
-        type="button"
-        class="control-button"
-        (click)="nextMonth()"
-        aria-label="Próximo mês">
-        <fa-icon [icon]="faChevronRight"></fa-icon>
-      </button>
-    </div>
+    <app-month-selector (monthChanged)="onMonthChanged($event)"></app-month-selector>
 
     <!-- Search and Filter Bar -->
-    <div class="search-filter-bar">
-      <div class="search-input-wrapper">
-        <fa-icon [icon]="faSearch" class="search-icon"></fa-icon>
-        <input
-          type="text"
-          class="search-input"
-          placeholder="Buscar receitas..."
-          [(ngModel)]="searchQuery">
-      </div>
-      <button type="button" class="filter-button">
-        <fa-icon [icon]="faFilter"></fa-icon>
-      </button>
+    <app-financial-search-bar
+      [placeholder]="'Buscar receitas...'"
+      [(searchQuery)]="searchQuery">
+    </app-financial-search-bar>
+
+    <!-- Empty States or List -->
+    <div *ngIf="hasNoIncomesInMonth">
+      <app-financial-empty-state
+        [type]="'receita'"
+        [emptyStateType]="'no-items'"
+        (addClick)="onFabClick()">
+      </app-financial-empty-state>
     </div>
 
-    <!-- Income List -->
-    <div class="income-list-card">
-      <div *ngIf="filteredIncomes.length === 0" class="empty-state">
-        <div class="empty-icon">
-          <fa-icon [icon]="faArrowTrendUp"></fa-icon>
-        </div>
-        <p class="empty-text">Nenhuma receita encontrada neste mês</p>
-        <button *appPermission="'create'" type="button" class="btn-add-income" (click)="onFabClick()">
-          <fa-icon [icon]="faArrowTrendUp"></fa-icon>
-          Adicionar Receita
-        </button>
-      </div>
-
-      <div *ngIf="filteredIncomes.length > 0" class="income-list">
-        <div *ngFor="let income of filteredIncomes" class="income-item">
-          <div class="income-item-left">
-            <div class="income-icon">
-              <fa-icon [icon]="faArrowTrendUp"></fa-icon>
-            </div>
-            <div class="income-info">
-              <p class="income-description">{{ income.description }}</p>
-              <p class="income-meta">{{ income.category }} • {{ formatDate(income.date) }}</p>
-            </div>
-          </div>
-          <div class="income-item-right">
-            <span class="income-value">+{{ formatCurrency(income.value) }}</span>
-            <p class="income-status" [class.status-paid]="income.is_paid">
-              {{ income.is_paid ? 'Recebido' : 'Pendente' }}
-            </p>
-          </div>
-        </div>
-      </div>
+    <div *ngIf="searchHasNoResults">
+      <app-financial-empty-state
+        [type]="'receita'"
+        [emptyStateType]="'no-results'">
+      </app-financial-empty-state>
     </div>
+
+    <app-financial-list
+      *ngIf="filteredIncomes.length > 0"
+      [items]="filteredIncomes"
+      [type]="'receita'"
+      (itemClick)="onIncomeClick($event)">
+    </app-financial-list>
   </div>
 
   <app-floating-action-button *appPermission="'create'" (clicked)="onFabClick()"></app-floating-action-button>
 </app-dashboard-layout>
 
-<app-transaction-modal 
-  [isOpen]="isModalOpen" 
+<app-transaction-modal
+  [isOpen]="isModalOpen"
+  [releaseToEdit]="selectedRelease"
   (close)="onCloseModal()"
   (saved)="onTransactionSaved()">
 </app-transaction-modal>

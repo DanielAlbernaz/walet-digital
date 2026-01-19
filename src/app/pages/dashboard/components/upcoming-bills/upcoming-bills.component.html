@@ -12,16 +12,15 @@
   </div>
 
   <div *ngIf="bills.length > 0" class="bills-list">
-    <div 
+    <div
       *ngFor="let bill of bills"
-      class="bill-item">
-      
+      class="bill-item"
+      (click)="onBillClick(bill)">
+
       <div class="bill-info">
-        <fa-icon 
-          *ngIf="isPast(bill.date)"
-          [icon]="faExclamationTriangle" 
-          class="bill-warning-icon">
-        </fa-icon>
+        <div class="bill-icon" [ngClass]="getDateStatus(bill.due_date || bill.date).class">
+          <fa-icon [icon]="getDateStatus(bill.due_date || bill.date).icon"></fa-icon>
+        </div>
         <div class="bill-details">
           <p class="bill-description">{{ bill.description }}</p>
           <p class="bill-category">
@@ -33,8 +32,8 @@
 
       <div class="bill-value-section">
         <span class="bill-value">{{ formatCurrency(bill.value) }}</span>
-        <span class="date-badge" [class]="getDateClass(bill.date)">
-          {{ getDateLabel(bill.date) }}
+        <span class="date-badge" [ngClass]="getDateStatus(bill.due_date || bill.date).class">
+          {{ getDateStatus(bill.due_date || bill.date).label }}
         </span>
       </div>
     </div>

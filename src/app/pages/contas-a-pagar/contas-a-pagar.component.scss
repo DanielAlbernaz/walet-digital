@@ -135,6 +135,14 @@
       font-size: 32px;
       color: var(--success);
     }
+
+    &.empty-icon-search {
+      background: var(--muted);
+
+      fa-icon {
+        color: var(--muted-foreground);
+      }
+    }
   }
 
   .empty-text {

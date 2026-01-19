@@ -1,0 +1,78 @@
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  text-align: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+
+  .empty-icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    margin-bottom: 16px;
+
+    &.icon-receita {
+      background: var(--success-light);
+
+      fa-icon {
+        font-size: 32px;
+        color: var(--success);
+      }
+    }
+
+    &.icon-despesa {
+      background: var(--destructive-light);
+
+      fa-icon {
+        font-size: 32px;
+        color: var(--destructive);
+      }
+    }
+
+    &.icon-search {
+      background: var(--muted);
+
+      fa-icon {
+        font-size: 32px;
+        color: var(--muted-foreground);
+      }
+    }
+  }
+
+  .empty-text {
+    font-size: 14px;
+    color: var(--muted-foreground);
+    margin: 0 0 16px 0;
+  }
+
+  .btn-add {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--foreground);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+
+    fa-icon {
+      font-size: 16px;
+    }
+
+    &:hover {
+      background: var(--accent);
+    }
+  }
+}

@@ -11,8 +11,22 @@ export class ApiService {
 
   constructor(private http: HttpClient) { }
 
-  get<T>(url: string): Observable<T> {
-    return this.http.get<T>(`${this.baseApiUrl}${url}`);
+  get<T>(url: string, params?: { [key: string]: any }): Observable<T> {
+    let fullUrl = `${this.baseApiUrl}${url}`;
+
+    // Adicionar query params se fornecidos
+    if (params) {
+      const queryString = Object.keys(params)
+        .filter(key => params[key] !== null && params[key] !== undefined)
+        .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(params[key])}`)
+        .join('&');
+
+      if (queryString) {
+        fullUrl += `?${queryString}`;
+      }
+    }
+
+    return this.http.get<T>(fullUrl);
   }
 
   post<T>(url: string, body: any): Observable<T> {

@@ -1,10 +1,12 @@
 <app-dashboard-layout>
+  <app-loading-overlay [isLoading]="isLoading"></app-loading-overlay>
+
   <div class="cartao-page">
     <!-- Header Section -->
     <div class="cartao-header">
       <div class="header-left">
         <h1 class="page-title">Cartão / Parcelas</h1>
-        <p class="page-subtitle">Acompanhe suas compras parceladas</p>
+        <p class="page-subtitle">Acompanhe suas compras parceladas - {{ getMonthSubtitle() }}</p>
       </div>
       <div class="header-right">
         <div class="month-summary-card">
@@ -17,9 +19,12 @@
       </div>
     </div>
 
+    <!-- Month Selector -->
+    <app-month-selector (monthChanged)="onMonthChanged($event)"></app-month-selector>
+
     <!-- Installments List -->
     <div class="installments-list">
-      <div *ngFor="let installment of installments" class="installment-card">
+      <div *ngFor="let installment of installments" class="installment-card" (click)="onInstallmentClick(installment)" style="cursor: pointer;">
         <div class="installment-header">
           <div class="installment-info">
             <h3 class="installment-title">{{ installment.description }}</h3>
@@ -55,7 +60,7 @@
           </div>
         </div>
 
-        <div class="installment-due-date">
+        <div class="installment-due-date" *ngIf="installment.nextDueDate">
           <fa-icon [icon]="faCalendar" class="calendar-icon"></fa-icon>
           <span class="due-date-text">
             Próximo vencimento: <span class="due-date-bold">{{ formatDate(installment.nextDueDate) }}</span>
@@ -65,7 +70,7 @@
     </div>
 
     <!-- Empty State -->
-    <div *ngIf="installments.length === 0" class="empty-state">
+    <div *ngIf="installments.length === 0 && !isLoading" class="empty-state">
       <p class="empty-text">Nenhuma compra parcelada encontrada.</p>
     </div>
   </div>
@@ -73,4 +78,71 @@
   <app-floating-action-button *appPermission="'create'" (clicked)="onFabClick()"></app-floating-action-button>
 </app-dashboard-layout>
 
-<app-transaction-modal [isOpen]="isModalOpen" (close)="onCloseModal()"></app-transaction-modal>
+<app-transaction-modal [isOpen]="isModalOpen" (close)="onCloseModal()" (saved)="onTransactionSaved()"></app-transaction-modal>
+
+<!-- Modal Panorama das Parcelas -->
+<div class="modal-overlay" *ngIf="isPanoramaModalOpen" (click)="onClosePanoramaModal()">
+  <div class="panorama-modal" (click)="$event.stopPropagation()" *ngIf="selectedInstallment">
+    <!-- Modal Header -->
+    <div class="panorama-header">
+      <div class="panorama-header-left">
+        <fa-icon [icon]="faCreditCard" class="panorama-icon"></fa-icon>
+        <h2 class="panorama-title">Panorama das Parcelas</h2>
+      </div>
+      <button type="button" class="close-button" (click)="onClosePanoramaModal()" aria-label="Fechar">
+        <fa-icon [icon]="faTimes"></fa-icon>
+      </button>
+    </div>
+
+    <!-- Resumo do Lançamento -->
+    <div class="panorama-summary">
+      <h3 class="summary-title">{{ selectedInstallment.description }}</h3>
+      <p class="summary-category">{{ selectedInstallment.category }}</p>
+      
+      <div class="summary-values">
+        <div class="summary-value-item">
+          <span class="summary-value-label">Valor Total</span>
+          <span class="summary-value-amount">{{ formatCurrency(selectedInstallment.totalValue) }}</span>
+        </div>
+        <div class="summary-value-item">
+          <span class="summary-value-label">Parcelas</span>
+          <span class="summary-value-amount">{{ selectedInstallment.paidInstallments }}/{{ selectedInstallment.totalInstallments }}</span>
+        </div>
+      </div>
+
+      <!-- Barra de Progresso -->
+      <div class="panorama-progress-section">
+        <div class="progress-bar-container-large">
+          <div class="progress-bar-large" [style.width.%]="getPanoramaProgress()"></div>
+        </div>
+        <div class="progress-stats">
+          <span class="progress-stat">Pago: {{ formatCurrency(getPanoramaPaidValue()) }}</span>
+          <span class="progress-stat">Restante: {{ formatCurrency(getPanoramaRemainingValue()) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lista de Parcelas -->
+    <div class="panorama-parcels-section">
+      <h4 class="parcels-title">Lista de Parcelas</h4>
+      <div class="parcels-list">
+        <div *ngFor="let parcel of getPanoramaParcels()" class="parcel-item" [ngClass]="getStatusClass(parcel)">
+          <div class="parcel-icon">
+            <fa-icon [icon]="getStatusIcon(parcel)"></fa-icon>
+          </div>
+          <div class="parcel-info">
+            <div class="parcel-number">{{ parcel.portion }}</div>
+            <div class="parcel-date">{{ formatDateShort(parcel.due_date) }}</div>
+          </div>
+          <div class="parcel-value-status">
+            <div class="parcel-value" [ngClass]="getStatusClass(parcel)">{{ formatCurrency(parcel.value) }}</div>
+            <div class="parcel-status" [ngClass]="getStatusClass(parcel)">{{ getStatusLabel(parcel) }}</div>
+          </div>
+          <div class="parcel-actions" *ngIf="getCanPay(parcel)">
+            <button type="button" class="btn-pay" (click)="onPayParcel(parcel)">Pagar</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

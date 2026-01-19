@@ -1,6 +1,44 @@
 @charset "UTF-8";
 /* Import Google Fonts */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Import Toastr Styles */
+@import 'ngx-toastr/toastr';
+
+/* Estilos para modal de pagamento do SweetAlert */
+.payment-modal-popup {
+  overflow-x: hidden !important;
+  max-width: 420px !important;
+  width: 420px !important;
+}
+
+.payment-modal-html {
+  overflow-x: hidden !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  padding: 0 1.25rem !important;
+  box-sizing: border-box !important;
+}
+
+.swal2-popup.payment-modal-popup .swal2-html-container {
+  overflow-x: hidden !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  padding: 0 1.25rem !important;
+  box-sizing: border-box !important;
+}
+
+.swal2-popup.payment-modal-popup #payment-date {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+  margin: 0 !important;
+}
+
+.swal2-popup.payment-modal-popup input[type="date"]#payment-date {
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
 
 /* Finanças Pro - Design System - Variáveis CSS */
 :root {

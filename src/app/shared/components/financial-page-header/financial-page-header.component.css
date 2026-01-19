@@ -1,0 +1,76 @@
+.financial-header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  @media (min-width: 640px) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.header-left {
+  .page-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--foreground);
+    margin: 0 0 4px 0;
+  }
+
+  .page-subtitle {
+    font-size: 14px;
+    color: var(--muted-foreground);
+    margin: 0;
+  }
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.total-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 12px;
+
+  &.total-receita {
+    background: var(--success-light);
+
+    .total-icon {
+      font-size: 20px;
+      color: var(--success);
+    }
+
+    .total-value {
+      color: var(--success);
+    }
+  }
+
+  &.total-despesa {
+    background: var(--destructive-light);
+
+    .total-icon {
+      font-size: 20px;
+      color: var(--destructive);
+    }
+
+    .total-value {
+      color: var(--destructive);
+    }
+  }
+
+  .total-label {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted-foreground);
+  }
+
+  .total-value {
+    font-size: 18px;
+    font-weight: 600;
+  }
+}

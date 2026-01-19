@@ -34,6 +34,9 @@
           <p class="release-description">{{ release.description }}</p>
           <p class="release-meta">
             {{ release.category }} • {{ formatDate(release.date) }}
+            <span *ngIf="getReleaseTypeTag(release)" [ngClass]="getReleaseTypeTag(release)?.class">
+              {{ getReleaseTypeTag(release)?.label }}
+            </span>
           </p>
         </div>
       </div>
@@ -45,7 +48,13 @@
           [class.value-expense]="!isIncome(release)">
           {{ isIncome(release) ? '+' : '-' }} {{ formatCurrency(release.value) }}
         </span>
-        <p class="release-status">{{ release.is_paid ? 'Pago' : 'Pendente' }}</p>
+        <span 
+          class="status-badge" 
+          [ngClass]="getStatusClass(release)"
+          [title]="getCancelTooltip(release)"
+          [attr.aria-label]="getCancelTooltip(release)">
+          {{ getStatusLabel(release) }}
+        </span>
       </div>
     </div>
   </div>

@@ -67,10 +67,13 @@
   background: var(--background);
   padding: 16px;
   transition: all 0.2s ease;
+  cursor: pointer;
 
   &:hover {
-    border-color: var(--border);
-    box-shadow: 0 1px 2px 0 rgba(217, 33%, 17%, 0.05);
+    border-color: var(--primary);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    background: var(--card);
+    transform: translateY(-2px);
   }
 
   .bill-info {
@@ -78,9 +81,42 @@
     align-items: center;
     gap: 12px;
 
-    .bill-warning-icon {
-      color: var(--destructive);
-      font-size: 16px;
+    .bill-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+
+      fa-icon {
+        font-size: 16px;
+      }
+
+      &.date-today,
+      &.date-tomorrow {
+        background: var(--warning-light);
+
+        fa-icon {
+          color: var(--warning);
+        }
+      }
+
+      &.date-overdue {
+        background: var(--destructive-light);
+
+        fa-icon {
+          color: var(--destructive);
+        }
+      }
+
+      &.date-upcoming {
+        background: var(--muted);
+
+        fa-icon {
+          color: var(--muted-foreground);
+        }
+      }
     }
 
     .bill-details {
@@ -123,8 +159,8 @@
 
   &.date-today,
   &.date-tomorrow {
-    color: var(--destructive); // Mesma cor vermelha do box de despesas
-    background: var(--destructive-light); // Mesmo background claro do box de despesas
+    color: var(--warning);
+    background: var(--warning-light);
   }
 
   &.date-upcoming {

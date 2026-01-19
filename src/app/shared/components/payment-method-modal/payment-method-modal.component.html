@@ -1,0 +1,56 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="onClose()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h2 class="modal-title">{{ isEditing ? 'Editar Método de Pagamento' : 'Novo Método de Pagamento' }}</h2>
+      <button type="button" class="modal-close-button" (click)="onClose()" aria-label="Fechar">
+        <fa-icon [icon]="faTimes"></fa-icon>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      <form [formGroup]="methodForm" class="method-form" (ngSubmit)="onSubmit()">
+        <!-- Nome do método -->
+        <div class="form-group">
+          <label class="form-label" for="name">Nome do método *</label>
+          <input
+            type="text"
+            id="name"
+            formControlName="name"
+            class="form-control"
+            placeholder="Ex: Cartão Itaú, Nubank..."
+            [class.is-invalid]="methodForm.get('name')?.invalid && methodForm.get('name')?.touched">
+          <div *ngIf="methodForm.get('name')?.invalid && methodForm.get('name')?.touched" class="invalid-feedback">
+            <span *ngIf="methodForm.get('name')?.errors?.['required']">O nome do método é obrigatório.</span>
+            <span *ngIf="methodForm.get('name')?.errors?.['maxlength']">O nome deve ter no máximo 255 caracteres.</span>
+          </div>
+        </div>
+
+        <!-- Status (Toggle) -->
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <label class="toggle-switch">
+            <input 
+              type="checkbox" 
+              formControlName="is_active"
+              (change)="onToggleChange($event)">
+            <span class="toggle-slider"></span>
+            <span class="toggle-label-text">{{ methodForm.get('is_active')?.value ? 'Ativo' : 'Desativado' }}</span>
+          </label>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="onClose()" [disabled]="isLoading">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="methodForm.invalid || isLoading">
+            <span *ngIf="isLoading">Salvando...</span>
+            <span *ngIf="!isLoading">Salvar</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

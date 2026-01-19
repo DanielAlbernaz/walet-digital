@@ -1,0 +1,99 @@
+<app-dashboard-layout>
+  <app-loading-overlay [isLoading]="isLoading"></app-loading-overlay>
+
+  <div class="metodos-pagamento-page">
+    <!-- Header Section -->
+    <app-financial-page-header
+      [title]="'Métodos de Pagamento'"
+      [subtitle]="'Gerencie suas formas de pagamento'"
+      [showTotal]="false">
+    </app-financial-page-header>
+
+    <!-- Add Button -->
+    <div class="page-actions">
+      <button 
+        type="button" 
+        class="btn-add"
+        [class.btn-disabled]="!hasCustomPaymentMethodsFeature()"
+        [disabled]="!hasCustomPaymentMethodsFeature()"
+        (click)="onAddClick()"
+        [title]="!hasCustomPaymentMethodsFeature() ? 'Funcionalidade disponível apenas no plano Pro' : ''">
+        <fa-icon [icon]="hasCustomPaymentMethodsFeature() ? faPlus : faLock"></fa-icon>
+        {{ hasCustomPaymentMethodsFeature() ? 'Adicionar' : 'Adicionar (Pro)' }}
+      </button>
+    </div>
+
+    <!-- Métodos Padrão -->
+    <div class="methods-section" *ngIf="defaultMethods.length > 0">
+      <h3 class="section-title">Métodos Padrão</h3>
+      <div class="methods-grid">
+        <div *ngFor="let method of defaultMethods" class="method-card method-card-default">
+          <div class="method-icon">
+            <fa-icon [icon]="getDefaultMethodIcon(method.name)"></fa-icon>
+          </div>
+          <div class="method-info">
+            <h4 class="method-name">{{ method.name }}</h4>
+          </div>
+          <div class="method-badge badge-default">Padrão</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Meus Métodos -->
+    <div class="methods-section" *ngIf="hasCustomPaymentMethodsFeature() && customMethods.length > 0">
+      <h3 class="section-title">Meus Métodos</h3>
+      <div class="methods-grid">
+        <div *ngFor="let method of customMethods" class="method-card method-card-custom" (click)="onEditClick(method)">
+          <div class="method-icon">
+            <fa-icon [icon]="faWallet"></fa-icon>
+          </div>
+          <div class="method-info">
+            <h4 class="method-name">{{ method.name }}</h4>
+          </div>
+          <div class="method-actions">
+            <span class="method-badge" [ngClass]="method.is_active ? 'badge-active' : 'badge-inactive'">
+              {{ method.is_active ? 'Ativo' : 'Desativado' }}
+            </span>
+            <button type="button" class="btn-icon btn-edit" (click)="$event.stopPropagation(); onEditClick(method)" title="Editar">
+              <fa-icon [icon]="faEdit"></fa-icon>
+            </button>
+            <button type="button" class="btn-icon btn-delete" (click)="$event.stopPropagation(); onDeleteClick(method)" title="Excluir">
+              <fa-icon [icon]="faTrash"></fa-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State para Métodos Personalizados (Free) -->
+    <div *ngIf="!hasCustomPaymentMethodsFeature() && defaultMethods.length > 0 && !isLoading" class="info-banner">
+      <div class="info-banner-content">
+        <fa-icon [icon]="faLock" class="info-icon"></fa-icon>
+        <div class="info-text">
+          <p class="info-title">Métodos de Pagamento Personalizados</p>
+          <p class="info-description">Upgrade para o plano Pro para criar seus próprios métodos de pagamento e ter mais controle sobre suas transações.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State geral -->
+    <div *ngIf="defaultMethods.length === 0 && customMethods.length === 0 && !isLoading" class="empty-state">
+      <p class="empty-text">Nenhum método de pagamento encontrado.</p>
+    </div>
+  </div>
+
+  <ng-container *ngIf="hasCustomPaymentMethodsFeature()">
+    <app-floating-action-button 
+      *appPermission="'create'" 
+      (clicked)="onAddClick()">
+    </app-floating-action-button>
+  </ng-container>
+</app-dashboard-layout>
+
+<!-- Modal de Criar/Editar Método de Pagamento -->
+<app-payment-method-modal
+  [isOpen]="isModalOpen"
+  [methodToEdit]="editingMethod"
+  (close)="onModalClose()"
+  (saved)="onModalSaved()">
+</app-payment-method-modal>

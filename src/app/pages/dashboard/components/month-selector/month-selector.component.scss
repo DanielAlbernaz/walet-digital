@@ -1,25 +1,8 @@
 .month-selector {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
   margin-bottom: 24px;
-  flex-wrap: wrap;
-  gap: 16px;
-
-  .selector-header {
-    .selector-title {
-      font-size: 24px;
-      font-weight: 700;
-      color: var(--foreground);
-      margin: 0 0 4px 0;
-    }
-
-    .selector-subtitle {
-      font-size: 14px;
-      color: var(--muted-foreground);
-      margin: 0;
-    }
-  }
 
   .selector-controls {
     display: flex;

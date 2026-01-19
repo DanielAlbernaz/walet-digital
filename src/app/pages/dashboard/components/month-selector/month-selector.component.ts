@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, Output, EventEmitter, OnInit } from '@angular/core';
 import { faChevronLeft, faChevronRight, faCalendar } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
@@ -6,12 +6,22 @@ import { faChevronLeft, faChevronRight, faCalendar } from '@fortawesome/free-sol
   templateUrl: './month-selector.component.html',
   styleUrls: ['./month-selector.component.scss']
 })
-export class MonthSelectorComponent {
-  currentMonth: Date = new Date(2026, 0, 1); // Janeiro 2026
+export class MonthSelectorComponent implements OnInit {
+  currentMonth: Date = new Date(); // Inicializar com o mês atual
+  @Output() monthChanged = new EventEmitter<Date>();
 
   faChevronLeft = faChevronLeft;
   faChevronRight = faChevronRight;
   faCalendar = faCalendar;
+
+  ngOnInit(): void {
+    // Emitir o mês atual ao inicializar
+    this.emitMonthChange();
+  }
+
+  private emitMonthChange(): void {
+    this.monthChanged.emit(this.currentMonth);
+  }
 
   getMonthYear(): string {
     const months = [
@@ -27,6 +37,7 @@ export class MonthSelectorComponent {
       this.currentMonth.getMonth() - 1,
       1
     );
+    this.emitMonthChange();
   }
 
   nextMonth(): void {
@@ -35,9 +46,11 @@ export class MonthSelectorComponent {
       this.currentMonth.getMonth() + 1,
       1
     );
+    this.emitMonthChange();
   }
 
   currentMonthClick(): void {
     this.currentMonth = new Date();
+    this.emitMonthChange();
   }
 }

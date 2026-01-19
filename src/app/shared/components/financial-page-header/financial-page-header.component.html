@@ -1,0 +1,13 @@
+<div class="financial-header">
+  <div class="header-left">
+    <h1 class="page-title">{{ title }}</h1>
+    <p class="page-subtitle">{{ subtitle }}</p>
+  </div>
+  <div class="header-right" *ngIf="showTotal === undefined || showTotal !== false">
+    <div class="total-card" [class.total-receita]="type === 'receita'" [class.total-despesa]="type === 'despesa'">
+      <fa-icon [icon]="type === 'receita' ? faArrowTrendUp : faArrowTrendDown" class="total-icon"></fa-icon>
+      <span class="total-label">Total:</span>
+      <span class="total-value">{{ formatCurrency(total) }}</span>
+    </div>
+  </div>
+</div>

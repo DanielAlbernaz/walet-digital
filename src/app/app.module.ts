@@ -29,17 +29,25 @@ import { ReceitasComponent } from './pages/receitas/receitas.component';
 import { DespesasComponent } from './pages/despesas/despesas.component';
 import { ContasAPagarComponent } from './pages/contas-a-pagar/contas-a-pagar.component';
 import { CartaoParcelasComponent } from './pages/cartao-parcelas/cartao-parcelas.component';
+import { MetodosPagamentoComponent } from './pages/metodos-pagamento/metodos-pagamento.component';
 import { ConfiguracoesComponent } from './pages/configuracoes/configuracoes.component';
+import { PaymentMethodModalComponent } from './shared/components/payment-method-modal/payment-method-modal.component';
 import { FloatingActionButtonComponent } from './shared/components/floating-action-button/floating-action-button.component';
 import { TransactionModalComponent } from './shared/components/transaction-modal/transaction-modal.component';
 import { UpgradeModalComponent } from './shared/components/upgrade-modal/upgrade-modal.component';
 import { InviteModalComponent } from './shared/components/invite-modal/invite-modal.component';
+import { LoadingOverlayComponent } from './shared/components/loading-overlay/loading-overlay.component';
+import { FinancialPageHeaderComponent } from './shared/components/financial-page-header/financial-page-header.component';
+import { FinancialSearchBarComponent } from './shared/components/financial-search-bar/financial-search-bar.component';
+import { FinancialListComponent } from './shared/components/financial-list/financial-list.component';
+import { FinancialEmptyStateComponent } from './shared/components/financial-empty-state/financial-empty-state.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 import { RoleDirective } from './directives/role.directive';
 import { PermissionDirective } from './directives/permission.directive';
 import { FeatureDirective } from './directives/feature.directive';
+import { ToastrModule } from 'ngx-toastr';
 
 @NgModule({
   declarations: [
@@ -59,11 +67,18 @@ import { FeatureDirective } from './directives/feature.directive';
     DespesasComponent,
     ContasAPagarComponent,
     CartaoParcelasComponent,
+    MetodosPagamentoComponent,
     ConfiguracoesComponent,
+    PaymentMethodModalComponent,
     FloatingActionButtonComponent,
     TransactionModalComponent,
     UpgradeModalComponent,
     InviteModalComponent,
+    LoadingOverlayComponent,
+    FinancialPageHeaderComponent,
+    FinancialSearchBarComponent,
+    FinancialListComponent,
+    FinancialEmptyStateComponent,
     RoleDirective,
     PermissionDirective,
     FeatureDirective
@@ -83,7 +98,16 @@ import { FeatureDirective } from './directives/feature.directive';
     MatDividerModule,
     MatSelectModule,
     MatFormFieldModule,
-    MatInputModule
+    MatInputModule,
+    ToastrModule.forRoot({
+      positionClass: 'toast-top-right',
+      timeOut: 3000,
+      progressBar: true,
+      closeButton: true,
+      tapToDismiss: true,
+      preventDuplicates: true,
+      maxOpened: 5
+    })
   ],
   providers: [
     {

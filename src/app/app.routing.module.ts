@@ -9,6 +9,7 @@ import { ReceitasComponent } from './pages/receitas/receitas.component';
 import { DespesasComponent } from './pages/despesas/despesas.component';
 import { ContasAPagarComponent } from './pages/contas-a-pagar/contas-a-pagar.component';
 import { CartaoParcelasComponent } from './pages/cartao-parcelas/cartao-parcelas.component';
+import { MetodosPagamentoComponent } from './pages/metodos-pagamento/metodos-pagamento.component';
 import { ConfiguracoesComponent } from './pages/configuracoes/configuracoes.component';
 import { authGuard } from './guards/auth.guard';
 
@@ -53,6 +54,11 @@ const routes: Routes = [
   {
     path: 'cartao-parcelas',
     component: CartaoParcelasComponent,
+    canActivate: [authGuard]
+  },
+  {
+    path: 'metodos-pagamento',
+    component: MetodosPagamentoComponent,
     canActivate: [authGuard]
   },
   {

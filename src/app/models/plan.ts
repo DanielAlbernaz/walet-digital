@@ -11,6 +11,7 @@ export interface PlanFeatures {
   advanced_reports: boolean;
   exports: boolean;
   custom_categories: boolean;
+  custom_payment_methods: boolean;
   // Adicione outras features conforme necessário
 }
 

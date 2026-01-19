@@ -1,4 +1,6 @@
 <app-dashboard-layout>
+  <app-loading-overlay [isLoading]="isLoading"></app-loading-overlay>
+
   <div class="contas-page">
     <!-- Header Section -->
     <div class="contas-header">
@@ -7,6 +9,9 @@
         <p class="page-subtitle">Organize suas contas pendentes do mês</p>
       </div>
     </div>
+
+    <!-- Month Selector -->
+    <app-month-selector (monthChanged)="onMonthChanged($event)"></app-month-selector>
 
     <!-- Summary Cards -->
     <div class="summary-cards-grid">
@@ -31,24 +36,39 @@
       </div>
     </div>
 
+    <!-- Search and Filter Bar -->
+    <app-financial-search-bar
+      [placeholder]="'Buscar contas...'"
+      [(searchQuery)]="searchQuery">
+    </app-financial-search-bar>
+
     <!-- Pending Bills List -->
     <div class="pending-bills-card">
       <div class="bills-header">
         <h3 class="bills-title">Contas Pendentes</h3>
       </div>
 
-      <div *ngIf="pendingBills.length === 0" class="empty-state">
+      <!-- Empty State: Nenhuma conta pendente no mês -->
+      <div *ngIf="hasNoPendingBillsInMonth" class="empty-state">
         <div class="empty-icon">
           <fa-icon [icon]="faCheckCircle"></fa-icon>
         </div>
         <p class="empty-text">Todas as contas do mês estão pagas! 🎉</p>
       </div>
 
+      <!-- Empty State: Busca sem resultados -->
+      <div *ngIf="searchHasNoResults" class="empty-state">
+        <div class="empty-icon empty-icon-search">
+          <fa-icon [icon]="faSearch"></fa-icon>
+        </div>
+        <p class="empty-text">Nenhuma conta encontrada com os parâmetros de busca</p>
+      </div>
+
       <div *ngIf="pendingBills.length > 0" class="bills-list">
-        <div *ngFor="let bill of pendingBills" class="bill-item">
+        <div *ngFor="let bill of pendingBills" class="bill-item" (click)="onBillClick(bill)" [style.cursor]="'pointer'">
           <div class="bill-item-left">
-            <div class="bill-icon" [ngClass]="getDateStatus(bill.date).class">
-              <fa-icon [icon]="getDateStatus(bill.date).icon"></fa-icon>
+            <div class="bill-icon" [ngClass]="getDateStatus(bill.due_date).class">
+              <fa-icon [icon]="getDateStatus(bill.due_date).icon"></fa-icon>
             </div>
             <div class="bill-info">
               <p class="bill-description">{{ bill.description }}</p>
@@ -61,11 +81,11 @@
           <div class="bill-item-right">
             <div class="bill-amount-section">
               <span class="bill-amount">{{ formatCurrency(bill.value) }}</span>
-              <p class="bill-date-badge" [ngClass]="getDateStatus(bill.date).class">
-                {{ getDateStatus(bill.date).label }}
+              <p class="bill-date-badge" [ngClass]="getDateStatus(bill.due_date).class">
+                {{ getDateStatus(bill.due_date).label }}
               </p>
             </div>
-            <button *appPermission="'edit'" type="button" class="btn-pay" (click)="onPayBill(bill.id)">
+            <button *appPermission="'edit'" type="button" class="btn-pay" (click)="onPayBill(bill.id); $event.stopPropagation()">
               Pagar
             </button>
           </div>
@@ -79,6 +99,7 @@
 
 <app-transaction-modal
   [isOpen]="isModalOpen"
+  [releaseToEdit]="selectedRelease"
   (close)="onCloseModal()"
   (saved)="onTransactionSaved()">
 </app-transaction-modal>

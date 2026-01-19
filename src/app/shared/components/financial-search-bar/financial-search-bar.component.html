@@ -1,0 +1,14 @@
+<div class="search-filter-bar">
+  <div class="search-input-wrapper">
+    <fa-icon [icon]="faSearch" class="search-icon"></fa-icon>
+    <input
+      type="text"
+      class="search-input"
+      [placeholder]="placeholder"
+      [value]="searchQuery"
+      (input)="onSearchChange($any($event.target).value)">
+  </div>
+  <button type="button" class="filter-button" (click)="onFilterButtonClick()">
+    <fa-icon [icon]="faFilter"></fa-icon>
+  </button>
+</div>

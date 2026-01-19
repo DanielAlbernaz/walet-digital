@@ -210,6 +210,10 @@
   justify-content: center;
   padding: 64px 24px;
   text-align: center;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
 
   .empty-icon {
     width: 64px;

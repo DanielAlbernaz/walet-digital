@@ -1,12 +1,13 @@
-import { Component, Input } from '@angular/core';
-import { faCalendar, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { faCalendar, faExclamationTriangle, faClock } from '@fortawesome/free-solid-svg-icons';
 
 export interface Bill {
   id: string;
   description: string;
   category: string;
   value: number;
-  date: string;
+  date: string; // Data de competência (para manter compatibilidade)
+  due_date?: string; // Data de vencimento (usada para as tags)
   portion?: string;
 }
 
@@ -17,9 +18,11 @@ export interface Bill {
 })
 export class UpcomingBillsComponent {
   @Input() bills: Bill[] = [];
+  @Output() billClick = new EventEmitter<Bill>();
 
   faCalendar = faCalendar;
   faExclamationTriangle = faExclamationTriangle;
+  faClock = faClock;
 
   formatCurrency(value: number): string {
     return new Intl.NumberFormat('pt-BR', {
@@ -28,7 +31,8 @@ export class UpcomingBillsComponent {
     }).format(value);
   }
 
-  getDateLabel(dateStr: string): string {
+  getDateStatus(dateStr: string): { label: string; class: string; icon: any } {
+    // Usar due_date se disponível, senão usar date
     const date = new Date(dateStr);
     const today = new Date();
     const tomorrow = new Date(today);
@@ -38,35 +42,40 @@ export class UpcomingBillsComponent {
     tomorrow.setHours(0, 0, 0, 0);
     date.setHours(0, 0, 0, 0);
 
-    if (date.getTime() === today.getTime()) return 'Hoje';
-    if (date.getTime() === tomorrow.getTime()) return 'Amanhã';
-    if (date < today) return 'Vencido';
+    if (date < today) {
+      return {
+        label: 'Vencido',
+        class: 'date-overdue',
+        icon: this.faExclamationTriangle
+      };
+    }
 
-    const months = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
-    return `${date.getDate()} de ${months[date.getMonth()]}`;
+    if (date.getTime() === today.getTime()) {
+      return {
+        label: 'Hoje',
+        class: 'date-today',
+        icon: this.faClock
+      };
+    }
+
+    if (date.getTime() === tomorrow.getTime()) {
+      return {
+        label: 'Amanhã',
+        class: 'date-tomorrow',
+        icon: this.faClock
+      };
+    }
+
+    const day = date.getDate();
+    const month = date.getMonth() + 1;
+    return {
+      label: `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}`,
+      class: 'date-upcoming',
+      icon: this.faClock
+    };
   }
 
-  getDateClass(dateStr: string): string {
-    const date = new Date(dateStr);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    date.setHours(0, 0, 0, 0);
-
-    if (date < today) return 'date-badge date-overdue';
-    if (date.getTime() === today.getTime()) return 'date-badge date-today';
-    
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    if (date.getTime() === tomorrow.getTime()) return 'date-badge date-tomorrow';
-    
-    return 'date-badge date-upcoming';
-  }
-
-  isPast(dateStr: string): boolean {
-    const date = new Date(dateStr);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    date.setHours(0, 0, 0, 0);
-    return date < today;
+  onBillClick(bill: Bill): void {
+    this.billClick.emit(bill);
   }
 }

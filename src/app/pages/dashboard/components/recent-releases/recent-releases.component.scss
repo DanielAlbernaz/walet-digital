@@ -123,6 +123,43 @@
         font-size: 12px;
         color: var(--muted-foreground);
         margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .portion-badge {
+        display: inline-block;
+        padding: 2px 6px;
+        background: var(--accent);
+        color: var(--accent-foreground);
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      .type-badge {
+        display: inline-block;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 500;
+      }
+
+      .type-installment {
+        background: #e0e7ff;
+        color: #4338ca;
+      }
+
+      .type-recurring {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .type-single {
+        background: var(--muted);
+        color: var(--muted-foreground);
       }
     }
   }
@@ -150,5 +187,35 @@
       color: var(--muted-foreground);
       margin: 0;
     }
+  }
+}
+
+.status-badge {
+  display: inline-block;
+  border-radius: 8px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-top: 4px;
+  cursor: default;
+
+  &.status-paid {
+    color: #16a34a; /* Verde */
+    background: #dcfce7;
+  }
+
+  &.status-pending {
+    color: #ca8a04; /* Amarelo */
+    background: #fef9c3;
+  }
+
+  &.status-cancelled {
+    color: #6b7280; /* Cinza */
+    background: #f3f4f6;
+  }
+
+  /* Tooltip para canceladas */
+  &[title] {
+    cursor: help;
   }
 }

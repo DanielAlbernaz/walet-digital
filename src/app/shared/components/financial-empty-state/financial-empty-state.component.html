@@ -1,0 +1,12 @@
+<div class="empty-state">
+  <div class="empty-icon" [class.icon-receita]="type === 'receita' && emptyStateType === 'no-items'" [class.icon-despesa]="type === 'despesa' && emptyStateType === 'no-items'" [class.icon-search]="emptyStateType === 'no-results'">
+    <fa-icon [icon]="icon"></fa-icon>
+  </div>
+  <p class="empty-text">{{ message }}</p>
+  <ng-container *ngIf="showButton">
+    <button *appPermission="'create'" type="button" class="btn-add" (click)="onAddClick()">
+      <fa-icon [icon]="type === 'receita' ? faArrowTrendUp : faArrowTrendDown"></fa-icon>
+      {{ buttonLabel }}
+    </button>
+  </ng-container>
+</div>

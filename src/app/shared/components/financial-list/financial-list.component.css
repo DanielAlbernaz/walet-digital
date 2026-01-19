@@ -1,0 +1,178 @@
+.financial-list-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08), 0 1px 4px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.financial-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.financial-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  transition: background-color 0.2s ease;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &:hover {
+    background: var(--muted);
+  }
+}
+
+.financial-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.financial-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+
+  &.icon-receita {
+    background: var(--success-light);
+
+    fa-icon {
+      font-size: 16px;
+      color: var(--success);
+    }
+  }
+
+  &.icon-despesa {
+    background: var(--destructive-light);
+
+    fa-icon {
+      font-size: 16px;
+      color: var(--destructive);
+    }
+  }
+}
+
+.financial-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .financial-description {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--foreground);
+    margin: 0;
+  }
+
+  .financial-meta {
+    font-size: 12px;
+    color: var(--muted-foreground);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .portion-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    background: var(--accent);
+    color: var(--accent-foreground);
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .type-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .type-installment {
+    background: #e0e7ff;
+    color: #4338ca;
+  }
+
+  .type-recurring {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .type-single {
+    background: var(--muted);
+    color: var(--muted-foreground);
+  }
+}
+
+.financial-item-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+
+  .financial-value {
+    font-size: 14px;
+    font-weight: 600;
+
+    &.value-receita {
+      color: var(--success);
+    }
+
+    &.value-despesa {
+      color: var(--destructive);
+    }
+  }
+
+  .financial-status {
+    font-size: 12px;
+    color: var(--muted-foreground);
+    margin: 0;
+
+    &.status-paid {
+      color: var(--success);
+    }
+  }
+
+  .status-badge {
+    display: inline-block;
+    border-radius: 8px;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 4px;
+    cursor: default;
+
+    &.status-paid {
+      color: #16a34a; /* Verde */
+      background: #dcfce7;
+    }
+
+    &.status-pending {
+      color: #ca8a04; /* Amarelo */
+      background: #fef9c3;
+    }
+
+    &.status-cancelled {
+      color: #6b7280; /* Cinza */
+      background: #f3f4f6;
+    }
+
+    /* Tooltip para canceladas */
+    &[title] {
+      cursor: help;
+    }
+  }
+}

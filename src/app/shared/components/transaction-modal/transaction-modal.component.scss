@@ -9,6 +9,44 @@
   text-align: center;
 }
 
+// Modal Loading Overlay (menor, dentro do modal)
+.modal-loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+  border-radius: 0 0 16px 16px;
+  backdrop-filter: blur(2px);
+}
+
+.modal-loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.modal-loading-icon {
+  font-size: 32px;
+  color: #2563EB; /* Azul principal do sistema */
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+.modal-loading-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: #424242;
+  margin: 0;
+  font-family: 'Roboto', sans-serif;
+}
+
 .modal-overlay {
   position: fixed;
   inset: 0;
@@ -75,6 +113,7 @@
   flex: 1;
   overflow-y: auto;
   padding: 24px;
+  position: relative; // Necessário para posicionar o loading overlay
 }
 
 .transaction-form {
@@ -99,6 +138,17 @@
   font-size: 14px;
   font-weight: 500;
   color: var(--foreground);
+
+  .required-asterisk {
+    color: var(--destructive);
+    margin-left: 2px;
+  }
+
+  .optional-label {
+    color: var(--muted-foreground);
+    font-weight: normal;
+    font-size: 0.875rem;
+  }
 }
 
 .type-selector {
@@ -392,6 +442,45 @@
       --mdc-list-list-item-selected-container-fill-color: hsl(217, 92%, 95%) !important;
     }
 
+    // Estilos para optgroups (labels dos grupos)
+    .mat-mdc-optgroup-label {
+      padding: 8px 12px !important;
+      margin: 0 !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      color: #6b7280 !important;
+      text-transform: uppercase !important;
+      letter-spacing: 0.5px !important;
+      background: transparent !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: flex-start !important;
+      position: relative !important;
+      overflow: visible !important;
+      text-overflow: clip !important;
+      white-space: normal !important;
+      min-height: auto !important;
+      outline: none !important;
+    }
+
+    // Remover espaços em branco entre optgroups
+    .mat-mdc-optgroup {
+      margin: 0 !important;
+      padding: 0 !important;
+      border: none !important;
+
+      &:not(:first-child) {
+        margin-top: 8px !important;
+      }
+
+      &:not(:last-child) {
+        margin-bottom: 0 !important;
+        padding-bottom: 0 !important;
+      }
+    }
+
     // Estilo dos itens do select - REDUZIR PADDING (menos largo)
     .mat-mdc-option {
       padding: 8px 12px !important; // Reduzido de 10px 16px para 8px 12px
@@ -521,13 +610,34 @@
   margin-top: -4px;
 }
 
+.form-hint {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  margin-top: 4px;
+  display: block;
+}
+
 .modal-footer {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 12px;
   padding: 20px 24px;
   border-top: 1px solid var(--border);
+
+  // Container dos botões Cancelar Lançamento e Deletar (à esquerda)
+  .footer-left {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  // Container dos botões Fechar e Salvar (à direita)
+  .footer-actions {
+    display: flex;
+    gap: 12px;
+    margin-left: auto;
+  }
 }
 
 .btn {
@@ -538,14 +648,65 @@
   cursor: pointer;
   transition: all 0.2s ease;
   border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &.btn-pay {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    background: #10B981; // Verde para pagar
+    color: white;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+
+    &:hover:not(:disabled) {
+      background: #059669;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  &.btn-delete {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    background: #EF4444; // Vermelho para deletar
+    color: white;
+    border-radius: 8px;
+
+    fa-icon {
+      font-size: 18px;
+    }
+
+    &:hover:not(:disabled) {
+      background: #DC2626; // Vermelho mais escuro no hover
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
 
   &.btn-cancel {
     background: var(--card);
     color: var(--foreground);
     border: 1px solid var(--border);
 
-    &:hover {
+    &:hover:not(:disabled) {
       background: var(--accent);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
   }
 
@@ -553,8 +714,13 @@
     background: hsl(217, 91%, 53%); // Azul similar ao mockup #3F51B5
     color: var(--primary-foreground);
 
-    &:hover {
+    &:hover:not(:disabled) {
       background: var(--primary-hover);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
   }
 }

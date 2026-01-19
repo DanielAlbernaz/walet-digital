@@ -1,6 +1,8 @@
 <app-dashboard-layout>
+  <app-loading-overlay [isLoading]="isLoading"></app-loading-overlay>
+
   <div class="dashboard-page">
-    <app-month-selector></app-month-selector>
+    <app-month-selector (monthChanged)="onMonthChanged($event)"></app-month-selector>
 
     <app-summary-cards
       [totalIncome]="totalIncome"
@@ -9,7 +11,10 @@
     </app-summary-cards>
 
     <div class="dashboard-grid">
-      <app-upcoming-bills [bills]="upcomingBills"></app-upcoming-bills>
+      <app-upcoming-bills
+        [bills]="upcomingBills"
+        (billClick)="onBillClick($event)">
+      </app-upcoming-bills>
       <app-recent-releases
         [releases]="recentReleases"
         (releaseClick)="onReleaseClick($event)">

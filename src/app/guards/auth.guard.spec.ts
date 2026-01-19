@@ -1,16 +1,13 @@
 import { TestBed } from '@angular/core/testing';
+import { ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 
-import { AuthGuard } from './auth.guard';
+import { authGuard } from './auth.guard';
 
 describe('AuthGuard', () => {
-  let service: AuthGuard;
-
-  beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(AuthGuard);
-  });
+  const mockRoute = {} as ActivatedRouteSnapshot;
+  const mockState = {} as RouterStateSnapshot;
 
   it('should be created', () => {
-    expect(service).toBeTruthy();
+    expect(authGuard).toBeTruthy();
   });
 });
