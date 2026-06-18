@@ -2,7 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { forkJoin } from 'rxjs';
 import { faClock, faCheckCircle, faExclamationTriangle, faSearch } from '@fortawesome/free-solid-svg-icons';
 import { FinancialReleaseService } from '../../services/financial-release/financial-release.service';
+import { PaymentMethodService } from '../../services/payment-method/payment-method.service';
 import { FinancialRelease, Category } from '../../models/financial-release';
+import { PaymentMethod } from '../../models/payment-method.model';
+import { FilterState, SortState } from '../../shared/components/advanced-filters/advanced-filters.component';
 
 export interface Bill {
   id: string;
@@ -35,10 +38,21 @@ export class ContasAPagarComponent implements OnInit {
 
   financialReleases: FinancialRelease[] = [];
   categoriesMap: Map<number, string> = new Map();
+  categories: Category[] = [];
+  paymentMethods: PaymentMethod[] = [];
   bills: Bill[] = [];
 
+  // Getter para filtrar categorias de despesas
+  get expenseCategories(): Category[] {
+    return this.categories.filter(c => c.type === 'expense' || c.type === 'despesa');
+  }
+
+  filters: FilterState = this.getInitialFilters();
+  sort: SortState = { field: 'date', direction: 'asc' };
+
   constructor(
-    private financialReleaseService: FinancialReleaseService
+    private financialReleaseService: FinancialReleaseService,
+    private paymentMethodService: PaymentMethodService
   ) {}
 
   ngOnInit(): void {
@@ -53,6 +67,7 @@ export class ContasAPagarComponent implements OnInit {
 
     forkJoin({
       categories: this.financialReleaseService.getCategories(),
+      paymentMethods: this.paymentMethodService.list(),
       // Buscar apenas despesas do mês selecionado usando filtros do backend
       releases: this.financialReleaseService.getFinancialReleasesWithFilters({
         month: selectedMonth,
@@ -62,12 +77,16 @@ export class ContasAPagarComponent implements OnInit {
         order_direction: 'desc'
       })
     }).subscribe({
-      next: ({ categories, releases }) => {
+      next: ({ categories, paymentMethods, releases }) => {
         // Processar categorias primeiro
+        this.categories = categories || [];
         this.categoriesMap.clear();
         categories.forEach(cat => {
           this.categoriesMap.set(cat.id, cat.title);
         });
+
+        // Métodos de pagamento
+        this.paymentMethods = paymentMethods || [];
 
         // Depois processar lançamentos (já filtrados por mês e tipo pelo backend)
         this.financialReleases = releases || [];
@@ -118,21 +137,180 @@ export class ContasAPagarComponent implements OnInit {
     // Excluir cancelados da listagem (cancelados não devem aparecer em "Contas a Pagar")
     let pending = this.bills.filter(bill => !bill.is_paid && bill.status !== 'cancelled');
 
-    // Ordenar por data de vencimento (vencendo primeiro)
-    pending = pending.sort((a, b) => {
-      const dateA = new Date(a.due_date).getTime();
-      const dateB = new Date(b.due_date).getTime();
-      return dateA - dateB; // Ordem crescente (vencendo primeiro)
-    });
+    // Aplicar filtros avançados
+    pending = this.applyFilters(pending);
 
-    if (!this.searchQuery || this.searchQuery.trim() === '') {
-      return pending;
+    // Aplicar ordenação
+    pending = this.applySort(pending);
+
+    return pending;
+  }
+
+  private applyFilters(bills: Bill[]): Bill[] {
+    let filtered = [...bills];
+
+    // Filtro de busca (search)
+    if (this.filters.search) {
+      const searchLower = this.filters.search.toLowerCase();
+      filtered = filtered.filter(bill => {
+        const release = this.financialReleases.find(r => String(r.id) === bill.id);
+        const categoryName = release ? this.getCategoryName(release.category_id) : '';
+        const description = bill.description?.toLowerCase() || '';
+        const observation = release?.observation?.toLowerCase() || '';
+        return description.includes(searchLower) ||
+               categoryName.toLowerCase().includes(searchLower) ||
+               observation.includes(searchLower);
+      });
     }
 
-    const query = this.searchQuery.toLowerCase().trim();
-    return pending.filter(bill =>
-      bill.description.toLowerCase().includes(query)
-    );
+    // Filtro de data de competência
+    if (this.filters.dateFrom || this.filters.dateTo) {
+      filtered = filtered.filter(bill => {
+        const itemDate = new Date(bill.date);
+        if (this.filters.dateFrom) {
+          const fromDate = new Date(this.filters.dateFrom);
+          fromDate.setHours(0, 0, 0, 0);
+          if (itemDate < fromDate) return false;
+        }
+        if (this.filters.dateTo) {
+          const toDate = new Date(this.filters.dateTo);
+          toDate.setHours(23, 59, 59, 999);
+          if (itemDate > toDate) return false;
+        }
+        return true;
+      });
+    }
+
+    // Filtro de data de vencimento (usando due_date)
+    // Como não temos filtro específico de vencimento nos filtros, usamos dateFrom/dateTo para competência
+    // Mas podemos usar paymentDateFrom/To para filtrar por due_date se necessário
+    if (this.filters.paymentDateFrom || this.filters.paymentDateTo) {
+      filtered = filtered.filter(bill => {
+        const dueDate = new Date(bill.due_date);
+        if (this.filters.paymentDateFrom) {
+          const fromDate = new Date(this.filters.paymentDateFrom);
+          fromDate.setHours(0, 0, 0, 0);
+          if (dueDate < fromDate) return false;
+        }
+        if (this.filters.paymentDateTo) {
+          const toDate = new Date(this.filters.paymentDateTo);
+          toDate.setHours(23, 59, 59, 999);
+          if (dueDate > toDate) return false;
+        }
+        return true;
+      });
+    }
+
+    // Filtro de status (para contas pendentes, não aplicamos status 'paid')
+    // Mas podemos filtrar por 'pending' ou 'overdue'
+    if (this.filters.status !== 'all') {
+      filtered = filtered.filter(bill => {
+        switch (this.filters.status) {
+          case 'pending':
+            const billDate = new Date(bill.due_date);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            billDate.setHours(0, 0, 0, 0);
+            return billDate >= today;
+          case 'overdue':
+            const billDateOverdue = new Date(bill.due_date);
+            const todayOverdue = new Date();
+            todayOverdue.setHours(0, 0, 0, 0);
+            billDateOverdue.setHours(0, 0, 0, 0);
+            return billDateOverdue < todayOverdue;
+          default:
+            return true;
+        }
+      });
+    }
+
+    // Filtro de categoria
+    if (this.filters.categoryId !== 'all') {
+      const categoryId = parseInt(this.filters.categoryId);
+      filtered = filtered.filter(bill => {
+        const release = this.financialReleases.find(r => String(r.id) === bill.id);
+        return release?.category_id === categoryId;
+      });
+    }
+
+    // Filtro de método de pagamento
+    if (this.filters.paymentMethodId !== 'all') {
+      const methodId = parseInt(this.filters.paymentMethodId);
+      filtered = filtered.filter(bill => {
+        const release = this.financialReleases.find(r => String(r.id) === bill.id);
+        return release?.payment_method_id === methodId;
+      });
+    }
+
+    // Filtro de tipo de lançamento (parcelado/avulso)
+    if (this.filters.hasInstallment !== 'all') {
+      filtered = filtered.filter(bill => {
+        const release = this.financialReleases.find(r => String(r.id) === bill.id);
+        const isInstallment = bill.portion || 
+                             release?.release_type === 'installment' ||
+                             (release?.repetition === 'parcelado' || release?.repetition === 'installments');
+        return this.filters.hasInstallment === 'installment' ? isInstallment : !isInstallment;
+      });
+    }
+
+    // Filtro de faixa de valor
+    if (this.filters.valueMin || this.filters.valueMax) {
+      const min = this.filters.valueMin ? parseFloat(this.filters.valueMin) : 0;
+      const max = this.filters.valueMax ? parseFloat(this.filters.valueMax) : Infinity;
+      filtered = filtered.filter(bill => bill.value >= min && bill.value <= max);
+    }
+
+    return filtered;
+  }
+
+  private applySort(bills: Bill[]): Bill[] {
+    const sorted = [...bills];
+
+    sorted.sort((a, b) => {
+      let comparison = 0;
+      switch (this.sort.field) {
+        case 'date':
+          // Para contas a pagar, ordenar por due_date (data de vencimento)
+          comparison = new Date(a.due_date).getTime() - new Date(b.due_date).getTime();
+          break;
+        case 'value':
+          comparison = a.value - b.value;
+          break;
+        case 'status':
+          // Ordenar por status de vencimento (vencido primeiro, depois pendentes)
+          const aStatus = this.getDateStatus(a.due_date).label === 'Vencido' ? 0 : 1;
+          const bStatus = this.getDateStatus(b.due_date).label === 'Vencido' ? 0 : 1;
+          comparison = aStatus - bStatus;
+          break;
+      }
+      return this.sort.direction === 'asc' ? comparison : -comparison;
+    });
+
+    return sorted;
+  }
+
+  getInitialFilters(): FilterState {
+    return {
+      search: '',
+      dateFrom: null,
+      dateTo: null,
+      paymentDateFrom: null,
+      paymentDateTo: null,
+      status: 'all',
+      categoryId: 'all',
+      paymentMethodId: 'all',
+      hasInstallment: 'all',
+      valueMin: '',
+      valueMax: ''
+    };
+  }
+
+  onFiltersChange(filters: FilterState): void {
+    this.filters = filters;
+  }
+
+  onSortChange(sort: SortState): void {
+    this.sort = sort;
   }
 
   get paidBills(): Bill[] {
@@ -140,16 +318,30 @@ export class ContasAPagarComponent implements OnInit {
     return this.bills.filter(bill => bill.is_paid);
   }
 
-  // Verificar se não há contas pendentes no mês (sem filtro de busca)
+  // Verificar se não há contas pendentes no mês (sem filtros avançados)
   get hasNoPendingBillsInMonth(): boolean {
     // Excluir cancelados da verificação também
     const pending = this.bills.filter(bill => !bill.is_paid && bill.status !== 'cancelled');
-    return pending.length === 0 && (!this.searchQuery || this.searchQuery.trim() === '');
+    return pending.length === 0 &&
+           !this.filters.search &&
+           this.filters.status === 'all' &&
+           this.filters.categoryId === 'all';
   }
 
-  // Verificar se a busca não encontrou resultados (mas pode haver contas pendentes no mês)
+  // Verificar se os filtros não encontram resultados
   get searchHasNoResults(): boolean {
-    return !!(this.searchQuery && this.searchQuery.trim() !== '' && this.pendingBills.length === 0);
+    const hasActiveFilters = !!(this.filters.search ||
+                            this.filters.status !== 'all' ||
+                            this.filters.categoryId !== 'all' ||
+                            this.filters.dateFrom ||
+                            this.filters.dateTo ||
+                            this.filters.paymentDateFrom ||
+                            this.filters.paymentDateTo ||
+                            this.filters.paymentMethodId !== 'all' ||
+                            this.filters.hasInstallment !== 'all' ||
+                            this.filters.valueMin ||
+                            this.filters.valueMax);
+    return hasActiveFilters && this.pendingBills.length === 0;
   }
 
   get totalPending(): number {

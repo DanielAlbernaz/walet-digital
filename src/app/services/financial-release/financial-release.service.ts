@@ -1,8 +1,19 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, forkJoin, of } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { ApiService } from '../api/api.service';
-import { FinancialRelease, CreateFinancialReleaseRequest, Category, PaginatedResponse, InstallmentSummary, InstallmentDetails } from '../../models/financial-release';
+import {
+  FinancialRelease,
+  CreateFinancialReleaseRequest,
+  PaginatedResponse,
+  InstallmentSummary,
+  InstallmentDetails,
+  BulkUpdateRequest,
+  BulkUpdateResponse,
+  BulkCreateFinancialReleaseRequest,
+  BulkCreateFinancialReleaseResponse
+} from '../../models/financial-release';
+import { Category } from '../../models/category.model';
 
 @Injectable({
   providedIn: 'root'
@@ -103,12 +114,56 @@ export class FinancialReleaseService {
     return this.apiService.post('financial_release', data);
   }
 
+  /**
+   * Criação em massa de lançamentos (importação OFX, etc.)
+   * Endpoint: POST /api/financial_release/bulk-create
+   */
+  bulkCreate(payload: BulkCreateFinancialReleaseRequest): Observable<BulkCreateFinancialReleaseResponse> {
+    return this.apiService.post<BulkCreateFinancialReleaseResponse>('financial_release/bulk-create', payload).pipe(
+      catchError(() => this.bulkCreateFallback(payload))
+    );
+  }
+
+  /** Fallback: cria um a um se o endpoint bulk ainda não existir no backend */
+  private bulkCreateFallback(payload: BulkCreateFinancialReleaseRequest): Observable<BulkCreateFinancialReleaseResponse> {
+    const releases = payload.releases || [];
+    if (releases.length === 0) {
+      return of({ message: 'Nenhum lançamento para criar', count: 0, data: [] });
+    }
+
+    return forkJoin(
+      releases.map((release) =>
+        this.createFinancialRelease(release).pipe(
+          map((res) => (res?.data ? res.data : res) as FinancialRelease),
+          catchError((err) => {
+            throw err;
+          })
+        )
+      )
+    ).pipe(
+      map((created) => ({
+        message: `${created.length} lançamento(s) criado(s) com sucesso`,
+        count: created.length,
+        data: created
+      }))
+    );
+  }
+
   updateFinancialRelease(id: number, data: Partial<CreateFinancialReleaseRequest>): Observable<FinancialRelease> {
     return this.apiService.put<FinancialRelease>(`financial_release/${id}`, data);
   }
 
   deleteFinancialRelease(id: number): Observable<any> {
     return this.apiService.delete(`financial_release/${id}`);
+  }
+
+  /**
+   * Edição em massa de lançamentos.
+   * Endpoint: PATCH /api/financial_release/bulk-update
+   * Requer pelo menos um campo de atualização além de ids.
+   */
+  bulkUpdate(payload: BulkUpdateRequest): Observable<BulkUpdateResponse> {
+    return this.apiService.patch<BulkUpdateResponse>('financial_release/bulk-update', payload);
   }
 
   cancelFinancialRelease(id: number): Observable<any> {

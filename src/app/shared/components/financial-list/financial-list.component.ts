@@ -24,7 +24,10 @@ export interface FinancialItem {
 export class FinancialListComponent {
   @Input() items: FinancialItem[] = [];
   @Input() type: 'receita' | 'despesa' = 'receita';
+  @Input() selectionMode: boolean = false;
+  @Input() selectedIds: string[] = [];
   @Output() itemClick = new EventEmitter<FinancialItem>();
+  @Output() selectionChange = new EventEmitter<string[]>();
 
   faArrowTrendUp = faArrowTrendUp;
   faArrowTrendDown = faArrowTrendDown;
@@ -44,8 +47,40 @@ export class FinancialListComponent {
     return `${day} de ${month}`;
   }
 
-  onItemClick(item: FinancialItem): void {
+  onItemClick(item: FinancialItem, event?: Event): void {
+    if (event?.target && (event.target as HTMLElement).closest('.selection-checkbox-wrap')) {
+      return;
+    }
     this.itemClick.emit(item);
+  }
+
+  isSelected(item: FinancialItem): boolean {
+    return this.selectedIds.includes(item.id);
+  }
+
+  toggleSelection(item: FinancialItem, event: Event): void {
+    event.stopPropagation();
+    const next = this.isSelected(item)
+      ? this.selectedIds.filter(id => id !== item.id)
+      : [...this.selectedIds, item.id];
+    this.selectionChange.emit(next);
+  }
+
+  get allSelected(): boolean {
+    return this.items.length > 0 && this.items.every(item => this.selectedIds.includes(item.id));
+  }
+
+  get someSelected(): boolean {
+    return this.selectedIds.length > 0;
+  }
+
+  toggleSelectAll(event: Event): void {
+    event.stopPropagation();
+    if (this.allSelected) {
+      this.selectionChange.emit([]);
+    } else {
+      this.selectionChange.emit(this.items.map(i => i.id));
+    }
   }
 
   getStatusLabel(item: FinancialItem): string {
@@ -71,7 +106,6 @@ export class FinancialListComponent {
     if (item.status === 'paid' || item.is_paid) {
       return 'status-paid';
     }
-    // Pendente ou overdue
     return 'status-pending';
   }
 

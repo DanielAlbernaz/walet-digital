@@ -1,0 +1,53 @@
+<div class="filter-summary">
+  <!-- Total -->
+  <div class="summary-card">
+    <div class="summary-card-content">
+      <div class="summary-icon" [ngClass]="mainBgClass">
+        <fa-icon [icon]="mainIcon" [ngClass]="mainColorClass"></fa-icon>
+      </div>
+      <div class="summary-info">
+        <p class="summary-label">Total ({{ totalCount }})</p>
+        <p class="summary-value" [ngClass]="mainColorClass">{{ formatCurrency(totalValue) }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Paid/Received -->
+  <div class="summary-card">
+    <div class="summary-card-content">
+      <div class="summary-icon bg-success-light">
+        <fa-icon [icon]="faCheckCircle" class="text-success"></fa-icon>
+      </div>
+      <div class="summary-info">
+        <p class="summary-label">{{ paidLabel }} ({{ paidCount }})</p>
+        <p class="summary-value text-success">{{ formatCurrency(paidValue) }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pending -->
+  <div class="summary-card">
+    <div class="summary-card-content">
+      <div class="summary-icon bg-warning-light">
+        <fa-icon [icon]="faClock" class="text-warning"></fa-icon>
+      </div>
+      <div class="summary-info">
+        <p class="summary-label">Pendente ({{ pendingCount }})</p>
+        <p class="summary-value text-warning">{{ formatCurrency(pendingValue) }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overdue -->
+  <div class="summary-card">
+    <div class="summary-card-content">
+      <div class="summary-icon bg-destructive-light">
+        <fa-icon [icon]="faArrowTrendDown" class="text-destructive"></fa-icon>
+      </div>
+      <div class="summary-info">
+        <p class="summary-label">Vencido ({{ overdueCount }})</p>
+        <p class="summary-value text-destructive">{{ formatCurrency(overdueValue) }}</p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,7 +1,21 @@
 <div class="financial-list-card">
   <div class="financial-list">
-    <div *ngFor="let item of items" class="financial-item" (click)="onItemClick(item)" [style.cursor]="'pointer'">
+    <!-- Cabeçalho com "selecionar todos" no modo de seleção -->
+    <div *ngIf="selectionMode && items.length > 0" class="financial-list-header">
+      <label class="selection-checkbox-wrap select-all">
+        <input
+          type="checkbox"
+          [checked]="allSelected"
+          [indeterminate]="someSelected && !allSelected"
+          (change)="toggleSelectAll($event)">
+        <span class="select-all-label">Selecionar todos</span>
+      </label>
+    </div>
+    <div *ngFor="let item of items" class="financial-item" (click)="onItemClick(item, $event)" [style.cursor]="'pointer'">
       <div class="financial-item-left">
+        <label *ngIf="selectionMode" class="selection-checkbox-wrap" (click)="toggleSelection(item, $event)">
+          <input type="checkbox" [checked]="isSelected(item)" (change)="toggleSelection(item, $event)">
+        </label>
         <div class="financial-icon" [class.icon-receita]="type === 'receita'" [class.icon-despesa]="type === 'despesa'">
           <fa-icon [icon]="type === 'receita' ? faArrowTrendUp : faArrowTrendDown"></fa-icon>
         </div>

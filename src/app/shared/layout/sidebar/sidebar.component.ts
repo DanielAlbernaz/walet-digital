@@ -10,7 +10,9 @@ import {
   faCog,
   faChevronLeft,
   faChevronRight,
-  faWallet
+  faWallet,
+  faTag,
+  faLightbulb
 } from '@fortawesome/free-solid-svg-icons';
 
 interface MenuItem {
@@ -35,8 +37,10 @@ export class SidebarComponent {
     { icon: faArrowTrendDown, label: 'Despesas', path: '/despesas' },
     { icon: faFileInvoice, label: 'Contas a Pagar', path: '/contas' },
     { icon: faCreditCard, label: 'Cartão / Parcelas', path: '/cartao-parcelas' },
+    { icon: faLightbulb, label: 'Planejamento', path: '/planejamento' },
+    { icon: faTag, label: 'Categorias', path: '/categorias' },
     { icon: faWallet, label: 'Métodos de Pagamento', path: '/metodos-pagamento' },
-    { icon: faChartBar, label: 'Relatórios', path: '/relatorios', disabled: true },
+    { icon: faChartBar, label: 'Relatórios', path: '/relatorios' },
     { icon: faCog, label: 'Configurações', path: '/configuracoes' },
   ];
 
@@ -56,6 +60,8 @@ export class SidebarComponent {
   }
 
   isActive(path: string): boolean {
-    return this.router.url === path || (path === '/dashboard' && this.router.url === '/');
+    return this.router.url === path ||
+           this.router.url.startsWith(path + '/') ||
+           (path === '/dashboard' && this.router.url === '/');
   }
 }

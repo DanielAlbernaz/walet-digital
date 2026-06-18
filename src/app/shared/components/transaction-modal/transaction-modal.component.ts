@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { forkJoin } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 import Swal from 'sweetalert2';
@@ -9,7 +9,9 @@ import { SweetAlertService } from '../../../services/sweetalert/sweetalert.servi
 import { PaymentMethodService } from '../../../services/payment-method/payment-method.service';
 import { CreateFinancialReleaseRequest, Category, FinancialRelease } from '../../../models/financial-release';
 import { PaymentMethod } from '../../../models/payment-method.model';
-import { faTimes, faCalendar, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { IconDefinition, faTimes, faCalendar, faTrash, faFileAlt, faHistory, faUser, faPlus, faEdit } from '@fortawesome/free-solid-svg-icons';
+import { ActivityLogService } from '../../../services/activity-log/activity-log.service';
+import { ActivityLog } from '../../../models/activity-log.model';
 
 @Component({
   selector: 'app-transaction-modal',
@@ -28,9 +30,20 @@ export class TransactionModalComponent implements OnInit, OnChanges {
   faTimes = faTimes;
   faCalendar = faCalendar;
   faTrash = faTrash;
+  faFileAlt = faFileAlt;
+  faHistory = faHistory;
+  faUser = faUser;
+  faPlus = faPlus;
+  faEdit = faEdit;
+
+  activeTab: 'dados' | 'historico' = 'dados';
+  activityLogs: ActivityLog[] = [];
+  isLoadingLogs = false;
 
   categories: Category[] = [];
   filteredCategories: Category[] = [];
+  defaultCategories: Category[] = [];
+  customCategories: Category[] = [];
 
   paymentMethods: PaymentMethod[] = [];
   defaultPaymentMethods: PaymentMethod[] = [];
@@ -55,16 +68,18 @@ export class TransactionModalComponent implements OnInit, OnChanges {
     private financialReleaseService: FinancialReleaseService,
     public paymentMethodService: PaymentMethodService,
     private sweetAlertService: SweetAlertService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private activityLogService: ActivityLogService
   ) {
     this.transactionForm = this.fb.group({
       type: ['despesa', Validators.required],
-      value: ['0,00', [Validators.required]],
+      value: ['0,00', [Validators.required, this.valueGreaterThanZeroValidator]],
       competenceDate: ['', Validators.required],
       dueDate: ['', Validators.required], // Data de vencimento (obrigatória)
       paymentDate: [''],
       description: ['', [Validators.required, Validators.minLength(3)]],
       category: ['', Validators.required],
+      payment_method: [null], // Método de pagamento (opcional)
       repetition: ['only', Validators.required], // 'only', 'installments', 'fixed' (aceita 'unico' também)
       number_installments_repetition: [''], // Para parcelamento (installments)
       number_repetition: [''], // Para recorrência (fixed)
@@ -101,6 +116,11 @@ export class TransactionModalComponent implements OnInit, OnChanges {
 
     // Gerenciar visibilidade e validação dos campos condicionais
     this.transactionForm.get('repetition')?.valueChanges.subscribe(repetition => {
+      // Se estiver editando, não aplicar validators (campos estão desabilitados)
+      if (this.releaseToEdit) {
+        return;
+      }
+
       const installmentsControl = this.transactionForm.get('number_installments_repetition');
       const numberRepetitionControl = this.transactionForm.get('number_repetition');
       const periodicityControl = this.transactionForm.get('periodicity');
@@ -129,12 +149,49 @@ export class TransactionModalComponent implements OnInit, OnChanges {
     });
 
     // Gerenciar validação da data de pagamento quando status for 'paid'
-    // E detectar mudança para 'cancelled' para chamar endpoint de cancelamento
+    // E detectar mudança para 'cancelled' para chamar endpoint de cancelamento (apenas para parcelas)
+    // Também desabilitar/habilitar campos quando status mudar para pago/cancelado
     this.transactionForm.get('status')?.valueChanges.subscribe(status => {
       const paymentDateControl = this.transactionForm.get('paymentDate');
 
+      // Desabilitar ou habilitar campos baseado no status
+      if (status === 'paid' || status === 'cancelled') {
+        // Se estiver pago ou cancelado, desabilitar TODOS os campos exceto status
+        this.disableAllFieldsExceptStatus();
+        // Garantir que payment_method está desabilitado (verificação extra)
+        const paymentMethodControl = this.transactionForm.get('payment_method');
+        if (paymentMethodControl && !paymentMethodControl.disabled) {
+          paymentMethodControl.disable({ emitEvent: false });
+        }
+      } else {
+        // Reabilitar campos se mudou de pago/cancelado para outro status
+        // Mas não reabilitar campos de repetição se estiver editando
+        if (this.releaseToEdit) {
+          // Se estiver editando, campos de repetição devem permanecer desabilitados
+          // Verificar se o lançamento original não está pago/cancelado antes de reabilitar
+          const originalStatus = this.releaseToEdit.status;
+          if (originalStatus !== 'paid' && originalStatus !== 'cancelled') {
+            this.enableAllFields();
+            // Redesabilitar campos de repetição
+            this.transactionForm.get('repetition')?.disable({ emitEvent: false });
+            this.transactionForm.get('number_installments_repetition')?.disable({ emitEvent: false });
+            this.transactionForm.get('number_repetition')?.disable({ emitEvent: false });
+            this.transactionForm.get('periodicity')?.disable({ emitEvent: false });
+            // Redesabilitar tipo se estiver editando
+            this.transactionForm.get('type')?.disable({ emitEvent: false });
+          }
+        } else {
+          this.enableAllFields();
+        }
+      }
+
+      // Verificar se é uma parcela (tem installment_id ou portion ou release_type === 'installment')
+      const isInstallment = this.releaseToEdit?.installment_id !== null && this.releaseToEdit?.installment_id !== undefined
+        || (this.releaseToEdit?.portion !== null && this.releaseToEdit?.portion !== undefined && this.releaseToEdit?.portion !== '')
+        || this.releaseToEdit?.release_type === 'installment';
+
       // Se mudou para 'cancelled' E está editando uma parcela pendente
-      if (status === 'cancelled' && this.releaseToEdit?.id) {
+      if (status === 'cancelled' && this.releaseToEdit?.id && isInstallment) {
         const currentStatus = this.releaseToEdit.status;
         // Só cancelar se não estava cancelado antes E não está pago
         if (currentStatus !== 'cancelled' && currentStatus !== 'paid') {
@@ -168,12 +225,12 @@ export class TransactionModalComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // Quando o modal abre ou quando releaseToEdit muda, carregar dados se estiver editando
-    if (changes['isOpen']?.currentValue && this.releaseToEdit) {
-      // Carregar categorias e dados do lançamento em paralelo
+    if (!changes['isOpen']?.currentValue) return;
+    this.activeTab = 'dados';
+    this.activityLogs = [];
+    if (this.releaseToEdit) {
       this.loadReleaseData(this.releaseToEdit);
-    } else if (changes['isOpen']?.currentValue && !this.releaseToEdit) {
-      // Se abrir sem lançamento, resetar formulário
+    } else {
       this.resetForm();
     }
   }
@@ -256,14 +313,62 @@ export class TransactionModalComponent implements OnInit, OnChanges {
             paymentDate: formatDateForInput(fullRelease.payment_date),
             description: fullRelease.descrition || '',
             category: fullRelease.category_id || '',
-            payment_method: (fullRelease as any).payment_method_id || null,
+            // Tentar obter payment_method_id de diferentes formatos que o backend pode retornar
+            // O select HTML usa strings, então converter para string se for número
+            payment_method: (() => {
+              const pmId = fullRelease.payment_method_id
+                || (fullRelease as any).payment_method?.id
+                || (fullRelease as any).payment_method_id
+                || null;
+
+
+              // Converter para string se for número, ou manter null
+              // O select HTML sempre trabalha com strings
+              return pmId !== null && pmId !== undefined ? String(pmId) : null;
+            })(),
             repetition: normalizedRepetition,
             number_installments_repetition: fullRelease.portion ? this.extractInstallments(fullRelease.portion) : '',
             number_repetition: '',
             periodicity: this.getPeriodicityFromRepetition(fullRelease.repetition),
             observation: fullRelease.observation || '',
-            status: fullRelease.status || 'pending'
+            // Backend aceita "aberto" e converte para "pending"; normalizar para exibição correta no select
+            status: (String(fullRelease.status) === 'aberto' ? 'pending' : fullRelease.status) || 'pending'
           }, { emitEvent: false }); // Não emitir eventos para evitar conflitos
+
+          // Desabilitar campos de repetição quando estiver editando
+          // Limpar validators antes de desabilitar para evitar erros de validação
+          const repetitionControl = this.transactionForm.get('repetition');
+          const installmentsControl = this.transactionForm.get('number_installments_repetition');
+          const numberRepetitionControl = this.transactionForm.get('number_repetition');
+          const periodicityControl = this.transactionForm.get('periodicity');
+
+          repetitionControl?.clearValidators();
+          repetitionControl?.updateValueAndValidity({ emitEvent: false });
+          repetitionControl?.disable({ emitEvent: false });
+
+          installmentsControl?.clearValidators();
+          installmentsControl?.updateValueAndValidity({ emitEvent: false });
+          installmentsControl?.disable({ emitEvent: false });
+
+          numberRepetitionControl?.clearValidators();
+          numberRepetitionControl?.updateValueAndValidity({ emitEvent: false });
+          numberRepetitionControl?.disable({ emitEvent: false });
+
+          periodicityControl?.clearValidators();
+          periodicityControl?.updateValueAndValidity({ emitEvent: false });
+          periodicityControl?.disable({ emitEvent: false });
+
+          // Desabilitar todos os campos (exceto status) quando estiver pago ou cancelado
+          const currentStatus = this.transactionForm.get('status')?.value;
+          if (currentStatus === 'paid' || currentStatus === 'cancelled') {
+            // Garantir que TODOS os campos (incluindo payment_method) sejam desabilitados
+            this.disableAllFieldsExceptStatus();
+            // Verificar se payment_method foi realmente desabilitado
+            const paymentMethodControl = this.transactionForm.get('payment_method');
+            if (paymentMethodControl && !paymentMethodControl.disabled) {
+              paymentMethodControl.disable({ emitEvent: false });
+            }
+          }
         }, 0);
 
         this.isLoading = false;
@@ -334,6 +439,9 @@ export class TransactionModalComponent implements OnInit, OnChanges {
     this.financialReleaseService.getCategories().subscribe({
       next: (categories) => {
         this.categories = categories;
+        // Separar categorias padrão (is_custom = false) e personalizadas (is_custom = true)
+        this.defaultCategories = categories.filter(c => !c.is_custom);
+        this.customCategories = categories.filter(c => c.is_custom);
         // Filtrar categorias por tipo inicial
         this.filterCategoriesByType(this.selectedType);
         this.isLoadingCategories = false;
@@ -344,6 +452,8 @@ export class TransactionModalComponent implements OnInit, OnChanges {
         // Manter array vazio em caso de erro
         this.categories = [];
         this.filteredCategories = [];
+        this.defaultCategories = [];
+        this.customCategories = [];
       }
     });
   }
@@ -352,10 +462,28 @@ export class TransactionModalComponent implements OnInit, OnChanges {
     // Backend retorna 'revenue'/'expense', mas aceita 'receita'/'despesa' do frontend
     const backendType = type === 'receita' ? 'revenue' : 'expense';
 
-    this.filteredCategories = this.categories.filter(category => {
-      // Aceitar tanto o tipo do backend quanto o do frontend
+    // Filtrar categorias padrão por tipo
+    const filteredDefault = this.defaultCategories.filter(category => {
       return category.type === type || category.type === backendType;
     });
+
+    // Filtrar categorias personalizadas por tipo
+    const filteredCustom = this.customCategories.filter(category => {
+      return category.type === type || category.type === backendType;
+    });
+
+    // Combinar padrão primeiro, depois personalizadas
+    this.filteredCategories = [...filteredDefault, ...filteredCustom];
+  }
+
+  // Getter para categorias padrão filtradas (para usar no template)
+  get defaultFilteredCategories(): Category[] {
+    return this.defaultCategories.filter(c => this.filteredCategories.includes(c));
+  }
+
+  // Getter para categorias personalizadas filtradas (para usar no template)
+  get customFilteredCategories(): Category[] {
+    return this.customCategories.filter(c => this.filteredCategories.includes(c));
   }
 
   getCategoryDisplayName(category: Category): string {
@@ -371,8 +499,9 @@ export class TransactionModalComponent implements OnInit, OnChanges {
     this.close.emit();
     this.errorMessage = '';
     this.resetForm();
-    // Limpar lançamento em edição ao fechar
     this.releaseToEdit = null;
+    this.activeTab = 'dados';
+    this.activityLogs = [];
   }
 
   onDelete(): void {
@@ -380,14 +509,30 @@ export class TransactionModalComponent implements OnInit, OnChanges {
       return;
     }
 
-    // Verificar se pode deletar (não pode ser pago)
-    if (this.releaseToEdit.status === 'paid') {
-      this.toastr.error('Não é possível excluir parcelas pagas. Parcelas pagas não podem ser alteradas.', 'Erro');
-      return;
+    // Verificar se é uma parcela (installment) e não uma recorrência (recurring)
+    // Priorizar release_type que é o mais confiável
+    let isInstallment = false;
+    const releaseType = this.releaseToEdit?.release_type;
+
+    if (releaseType === 'installment') {
+      isInstallment = true;
+    } else if (releaseType === 'recurring') {
+      isInstallment = false; // Recorrência não é parcela
+    } else {
+      // Fallback: se não tiver release_type ou for 'single', verificar installment_id
+      // Se não tiver release_type definido e tiver installment_id, provavelmente é uma parcela
+      isInstallment = this.releaseToEdit?.installment_id !== null
+        && this.releaseToEdit?.installment_id !== undefined;
     }
 
+    // Mensagem de confirmação baseada no tipo de lançamento
+    // Backend permite exclusão de lançamentos pagos, pendentes e cancelados (soft delete)
+    const confirmMessage = isInstallment
+      ? 'Deseja realmente excluir esta parcela? Esta ação não pode ser desfeita.'
+      : 'Deseja realmente excluir este lançamento? Esta ação não pode ser desfeita.';
+
     // Confirmar exclusão (soft delete)
-    this.sweetAlertService.confirmDelete('Deseja realmente excluir esta parcela? Esta ação não pode ser desfeita para parcelas pendentes.').then((result) => {
+    this.sweetAlertService.confirmDelete(confirmMessage).then((result) => {
       if (result.isConfirmed) {
         this.isLoading = true;
         this.errorMessage = '';
@@ -396,14 +541,21 @@ export class TransactionModalComponent implements OnInit, OnChanges {
         this.financialReleaseService.deleteFinancialRelease(this.releaseToEdit!.id!).subscribe({
           next: (response) => {
             this.isLoading = false;
-            this.toastr.success('Parcela excluída com sucesso.', 'Sucesso');
+            const successMessage = isInstallment
+              ? 'Parcela excluída com sucesso.'
+              : 'Lançamento excluído com sucesso.';
+            this.toastr.success(successMessage, 'Sucesso');
             this.saved.emit();
             this.onClose();
           },
           error: (error) => {
             this.isLoading = false;
 
-            let errorMessage = 'Erro ao excluir parcela. Tente novamente.';
+            const defaultErrorMessage = isInstallment
+              ? 'Erro ao excluir parcela. Tente novamente.'
+              : 'Erro ao excluir lançamento. Tente novamente.';
+
+            let errorMessage = defaultErrorMessage;
             if (error.status === 0) {
               errorMessage = 'Erro de conexão. Verifique se o servidor está rodando.';
             } else if (error.status === 403) {
@@ -474,9 +626,8 @@ export class TransactionModalComponent implements OnInit, OnChanges {
   }
 
   get canDelete(): boolean {
-    // Pode deletar se estiver editando, não estiver pago e não estiver já deletado/cancelado
-    return !!(this.releaseToEdit?.id &&
-              this.releaseToEdit.status !== 'paid');
+    // Pode deletar se estiver editando (backend permite exclusão de pagos, pendentes e cancelados via soft delete)
+    return !!(this.releaseToEdit?.id);
   }
 
   get canPay(): boolean {
@@ -619,10 +770,23 @@ export class TransactionModalComponent implements OnInit, OnChanges {
       this.isLoading = true;
       this.errorMessage = '';
 
-      const formValue = this.transactionForm.value;
+      // Usar getRawValue() para incluir valores de campos desabilitados
+      // Necessário quando estiver editando ou quando campos estão desabilitados (pago/cancelado)
+      const formValue = (this.releaseToEdit || this.isPaidOrCancelled)
+        ? this.transactionForm.getRawValue()
+        : this.transactionForm.value;
 
       // Converter valor de formato brasileiro (0,00) para número
       const numericValue = this.parseBrazilianCurrency(formValue.value);
+
+      // Validar que o valor é maior que zero
+      if (numericValue <= 0) {
+        this.isLoading = false;
+        this.errorMessage = 'O valor deve ser maior que zero.';
+        this.transactionForm.get('value')?.setErrors({ minValue: true });
+        this.transactionForm.get('value')?.markAsTouched();
+        return;
+      }
 
       // Obter category_id - formValue.category agora é o ID da categoria (número)
       const categoryId = typeof formValue.category === 'number'
@@ -648,32 +812,41 @@ export class TransactionModalComponent implements OnInit, OnChanges {
 
       const normalizedRepetition = normalizeRepetitionValue(formValue.repetition);
 
-      // Validações condicionais antes de enviar
-      if (normalizedRepetition === 'installments') {
-        const numInstallments = parseInt(formValue.number_installments_repetition) || 0;
-        if (!formValue.number_installments_repetition || numInstallments < 2 || numInstallments > 240) {
-          this.isLoading = false;
-          this.errorMessage = 'Número de parcelas deve ser entre 2 e 240.';
-          return;
-        }
-      } else if (normalizedRepetition === 'fixed') {
-        const numRepetition = parseInt(formValue.number_repetition) || 0;
-        if (!formValue.number_repetition || numRepetition < 1 || numRepetition > 240) {
-          this.isLoading = false;
-          this.errorMessage = 'Número de repetições deve ser entre 1 e 240.';
-          return;
-        }
-        if (!formValue.periodicity || !['daily', 'weekly', 'monthly', 'annual'].includes(formValue.periodicity)) {
-          this.isLoading = false;
-          this.errorMessage = 'Selecione a frequência da recorrência.';
-          return;
+      // Validações condicionais antes de enviar (apenas na criação, não na edição)
+      // Na edição, os campos de repetição estão desabilitados e não devem ser validados
+      if (!this.releaseToEdit) {
+        if (normalizedRepetition === 'installments') {
+          const numInstallments = parseInt(formValue.number_installments_repetition) || 0;
+          if (!formValue.number_installments_repetition || numInstallments < 2 || numInstallments > 240) {
+            this.isLoading = false;
+            this.errorMessage = 'Número de parcelas deve ser entre 2 e 240.';
+            return;
+          }
+        } else if (normalizedRepetition === 'fixed') {
+          const numRepetition = parseInt(formValue.number_repetition) || 0;
+          if (!formValue.number_repetition || numRepetition < 1 || numRepetition > 240) {
+            this.isLoading = false;
+            this.errorMessage = 'Número de repetições deve ser entre 1 e 240.';
+            return;
+          }
+          if (!formValue.periodicity || !['daily', 'weekly', 'monthly', 'annual'].includes(formValue.periodicity)) {
+            this.isLoading = false;
+            this.errorMessage = 'Selecione a frequência da recorrência.';
+            return;
+          }
         }
       }
 
       // Obter payment_method_id (opcional)
-      const paymentMethodId = formValue.payment_method && formValue.payment_method !== '' && formValue.payment_method !== null
-        ? parseInt(formValue.payment_method) || null 
-        : null;
+      // Pode vir como número (ID) ou string (precisa converter)
+      let paymentMethodId: number | null = null;
+      if (formValue.payment_method) {
+        if (typeof formValue.payment_method === 'number') {
+          paymentMethodId = formValue.payment_method;
+        } else if (typeof formValue.payment_method === 'string' && formValue.payment_method !== '' && formValue.payment_method !== 'null') {
+          paymentMethodId = parseInt(formValue.payment_method) || null;
+        }
+      }
 
       // Construir payload da API base
       const payload: any = {
@@ -684,43 +857,55 @@ export class TransactionModalComponent implements OnInit, OnChanges {
         payment_date: formValue.paymentDate || null,
         descrition: formValue.description || null,
         observation: formValue.observation || null,
-        repetition: normalizedRepetition,
         category_id: categoryId,
         status: formValue.status || 'pending'
       };
 
-      // Adicionar payment_method_id se foi selecionado
-      if (paymentMethodId) {
+      // Adicionar payment_method_id (tanto na criação quanto na edição)
+      // Na edição, sempre enviar o valor atual (mesmo que seja null) para garantir que seja atualizado
+      if (this.releaseToEdit) {
+        // Na edição, sempre enviar payment_method_id (pode ser null para remover)
         payload.payment_method_id = paymentMethodId;
+      } else {
+        // Na criação, só enviar se foi selecionado
+        if (paymentMethodId) {
+          payload.payment_method_id = paymentMethodId;
+        }
       }
 
-      // Adicionar campos condicionais baseado no tipo de repetição
-      // IMPORTANTE: Remover explicitamente campos que não se aplicam ao tipo escolhido
-      if (normalizedRepetition === 'installments') {
-        // Parcelamento: adicionar APENAS number_installments_repetition
-        const numInstallments = parseInt(formValue.number_installments_repetition) || 0;
-        if (numInstallments >= 2 && numInstallments <= 240) {
-          payload.number_installments_repetition = numInstallments;
+      // Campos de repetição só devem ser enviados na criação, não na edição
+      // Na edição, esses campos estão desabilitados e não podem ser alterados
+      if (!this.releaseToEdit) {
+        payload.repetition = normalizedRepetition;
+
+        // Adicionar campos condicionais baseado no tipo de repetição
+        // IMPORTANTE: Remover explicitamente campos que não se aplicam ao tipo escolhido
+        if (normalizedRepetition === 'installments') {
+          // Parcelamento: adicionar APENAS number_installments_repetition
+          const numInstallments = parseInt(formValue.number_installments_repetition) || 0;
+          if (numInstallments >= 2 && numInstallments <= 240) {
+            payload.number_installments_repetition = numInstallments;
+          }
+          // Garantir que periodicity e number_repetition NÃO sejam enviados
+          delete payload.periodicity;
+          delete payload.number_repetition;
+        } else if (normalizedRepetition === 'fixed') {
+          // Recorrente: adicionar number_repetition e periodicity
+          const numRepetition = parseInt(formValue.number_repetition) || 0;
+          if (numRepetition >= 1 && numRepetition <= 240) {
+            payload.number_repetition = numRepetition;
+          }
+          if (formValue.periodicity && ['daily', 'weekly', 'monthly', 'annual'].includes(formValue.periodicity)) {
+            payload.periodicity = formValue.periodicity;
+          }
+          // Garantir que number_installments_repetition NÃO seja enviado
+          delete payload.number_installments_repetition;
+        } else {
+          // Para 'only', remover todos os campos condicionais
+          delete payload.periodicity;
+          delete payload.number_repetition;
+          delete payload.number_installments_repetition;
         }
-        // Garantir que periodicity e number_repetition NÃO sejam enviados
-        delete payload.periodicity;
-        delete payload.number_repetition;
-      } else if (normalizedRepetition === 'fixed') {
-        // Recorrente: adicionar number_repetition e periodicity
-        const numRepetition = parseInt(formValue.number_repetition) || 0;
-        if (numRepetition >= 1 && numRepetition <= 240) {
-          payload.number_repetition = numRepetition;
-        }
-        if (formValue.periodicity && ['daily', 'weekly', 'monthly', 'annual'].includes(formValue.periodicity)) {
-          payload.periodicity = formValue.periodicity;
-        }
-        // Garantir que number_installments_repetition NÃO seja enviado
-        delete payload.number_installments_repetition;
-      } else {
-        // Para 'only', remover todos os campos condicionais
-        delete payload.periodicity;
-        delete payload.number_repetition;
-        delete payload.number_installments_repetition;
       }
 
       // DEBUG: Log do payload que será enviado
@@ -732,8 +917,17 @@ export class TransactionModalComponent implements OnInit, OnChanges {
 
       // Verificar se está editando ou criando
       const isEditing = this.releaseToEdit && this.releaseToEdit.id;
+      const originalStatus = this.releaseToEdit?.status;
+
+      // Quando o lançamento original está pago ou cancelado, o backend aceita APENAS alteração de status
+      // Devemos enviar somente o campo status para que a requisição seja aceita
+      const isPaidOrCancelledOriginal = originalStatus === 'paid' || originalStatus === 'cancelled';
+      const updatePayload = isEditing && isPaidOrCancelledOriginal
+        ? { status: formValue.status || 'pending' }
+        : payload;
+
       const request = isEditing && this.releaseToEdit?.id
-        ? this.financialReleaseService.updateFinancialRelease(this.releaseToEdit.id, payload)
+        ? this.financialReleaseService.updateFinancialRelease(this.releaseToEdit.id, updatePayload)
         : this.financialReleaseService.createFinancialRelease(payload);
 
       request.subscribe({
@@ -854,6 +1048,24 @@ export class TransactionModalComponent implements OnInit, OnChanges {
     return parseFloat(cleaned) || 0;
   }
 
+  // Validador personalizado para garantir que o valor seja maior que zero
+  private valueGreaterThanZeroValidator = (control: AbstractControl): ValidationErrors | null => {
+    if (!control.value) {
+      return null; // Validator.required já trata o valor vazio
+    }
+
+    // Converter valor brasileiro para número
+    const valueStr = String(control.value);
+    const cleaned = valueStr.replace(/\./g, '').replace(',', '.');
+    const numericValue = parseFloat(cleaned) || 0;
+
+    if (numericValue <= 0) {
+      return { minValue: true };
+    }
+
+    return null;
+  };
+
   private resetForm(): void {
     this.transactionForm.reset({
       type: 'despesa',
@@ -863,6 +1075,7 @@ export class TransactionModalComponent implements OnInit, OnChanges {
       paymentDate: '',
       description: '',
       category: '',
+      payment_method: null,
       repetition: 'only',
       number_installments_repetition: '',
       number_repetition: '',
@@ -870,10 +1083,73 @@ export class TransactionModalComponent implements OnInit, OnChanges {
       observation: '',
       status: 'pending'
     });
+
+    // Reabilitar campos de repetição quando criar novo lançamento
+    this.transactionForm.get('repetition')?.enable({ emitEvent: false });
+    this.transactionForm.get('number_installments_repetition')?.enable({ emitEvent: false });
+    this.transactionForm.get('number_repetition')?.enable({ emitEvent: false });
+    this.transactionForm.get('periodicity')?.enable({ emitEvent: false });
+
+    // Reabilitar todos os campos ao criar novo lançamento
+    this.enableAllFields();
+
     this.selectedType = 'despesa';
     this.errorMessage = '';
     // Atualizar filtro de categorias ao resetar
     this.filterCategoriesByType('despesa');
+  }
+
+  // Getter para verificar se o lançamento está pago ou cancelado
+  get isPaidOrCancelled(): boolean {
+    const status = this.transactionForm.get('status')?.value;
+    return status === 'paid' || status === 'cancelled';
+  }
+
+  // Getter para obter o tooltip baseado no status
+  get lockTooltip(): string {
+    const status = this.transactionForm.get('status')?.value;
+    if (status === 'paid') {
+      return 'Este lançamento está pago e não pode ser editado. Apenas o status pode ser alterado para garantir a integridade dos dados.';
+    } else if (status === 'cancelled') {
+      return 'Este lançamento está cancelado e não pode ser editado. Apenas o status pode ser alterado para garantir a integridade dos dados.';
+    }
+    return '';
+  }
+
+  // Método para desabilitar todos os campos exceto status
+  private disableAllFieldsExceptStatus(): void {
+    const fieldsToDisable = [
+      'type', 'value', 'competenceDate', 'dueDate', 'paymentDate',
+      'description', 'category', 'payment_method', 'observation'
+    ];
+
+    fieldsToDisable.forEach(fieldName => {
+      const control = this.transactionForm.get(fieldName);
+      if (control && !control.disabled) {
+        control.disable({ emitEvent: false });
+      }
+    });
+
+    // Garantir que payment_method está desabilitado (verificação extra)
+    const paymentMethodControl = this.transactionForm.get('payment_method');
+    if (paymentMethodControl && !paymentMethodControl.disabled) {
+      paymentMethodControl.disable({ emitEvent: false });
+    }
+  }
+
+  // Método para reabilitar todos os campos
+  private enableAllFields(): void {
+    const allFields = [
+      'type', 'value', 'competenceDate', 'dueDate', 'paymentDate',
+      'description', 'category', 'payment_method', 'observation'
+    ];
+
+    allFields.forEach(fieldName => {
+      const control = this.transactionForm.get(fieldName);
+      if (control?.disabled) {
+        control.enable({ emitEvent: false });
+      }
+    });
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {
@@ -899,7 +1175,174 @@ export class TransactionModalComponent implements OnInit, OnChanges {
       if (field.errors['min']) {
         return 'Valor mínimo não atingido';
       }
+      if (field.errors['minValue']) {
+        return 'O valor deve ser maior que zero';
+      }
     }
     return '';
+  }
+
+  setActiveTab(tab: 'dados' | 'historico'): void {
+    this.activeTab = tab;
+    if (tab === 'historico' && this.releaseToEdit?.id) {
+      this.loadActivityLogs();
+    }
+  }
+
+  loadActivityLogs(): void {
+    const id = this.releaseToEdit?.id;
+    if (!id) return;
+    this.isLoadingLogs = true;
+    this.activityLogs = [];
+    this.activityLogService.getLogsByFinancialRelease(id).subscribe({
+      next: (res) => {
+        this.activityLogs = res.data ?? [];
+        this.isLoadingLogs = false;
+      },
+      error: () => {
+        this.activityLogs = [];
+        this.isLoadingLogs = false;
+      }
+    });
+  }
+
+  getActionLabel(action: string): string {
+    const labels: Record<string, string> = {
+      created: 'Criado',
+      updated: 'Atualizado',
+      deleted: 'Excluído'
+    };
+    return labels[action] ?? action;
+  }
+
+  getLogIcon(action: string): IconDefinition {
+    const icons: Record<string, IconDefinition> = {
+      created: faPlus,
+      updated: faEdit,
+      deleted: faTrash
+    };
+    return icons[action] ?? faHistory;
+  }
+
+  formatLogDate(value: string | undefined): string {
+    if (!value) return '';
+    const s = String(value).trim();
+    if (!s) return '';
+    if (s.includes(' às ')) return s;
+    const space = s.indexOf(' ');
+    if (space > 0) return s.slice(0, space) + ' às ' + s.slice(space + 1);
+    return s;
+  }
+
+  trackByLogId(_index: number, log: ActivityLog): number {
+    return log.id;
+  }
+
+  private static readonly FIELD_LABELS: Record<string, string> = {
+    type: 'Tipo',
+    value: 'Valor',
+    date: 'Data de Competência',
+    due_date: 'Data de Vencimento',
+    payment_date: 'Data de Pagamento',
+    descrition: 'Descrição',
+    observation: 'Observação',
+    category_id: 'Categoria',
+    payment_method_id: 'Forma de Pagamento',
+    status: 'Status',
+    repetition: 'Repetição',
+    number_installments_repetition: 'Quantidade de parcelas',
+    number_repetition: 'Número de repetições',
+    periodicity: 'Frequência'
+  };
+
+  private static readonly SKIP_KEYS = new Set([
+    'id', 'created_at', 'updated_at', 'deleted_at', 'finance_account_id',
+    'created_by', 'installment_id', 'portion', 'release_type'
+  ]);
+
+  getChangesSummary(log: ActivityLog): string[] {
+    const lines: string[] = [];
+    const c = log.changes;
+    if (!c) return lines;
+
+    const label = (key: string) => TransactionModalComponent.FIELD_LABELS[key] ?? key;
+    const fmt = (key: string, v: unknown) => this.formatChangeValue(key, v);
+    const skip = (k: string) => TransactionModalComponent.SKIP_KEYS.has(k);
+
+    if (log.action === 'created' && c.new && typeof c.new === 'object') {
+      const o = c.new as Record<string, unknown>;
+      for (const k of Object.keys(o)) {
+        if (skip(k) || o[k] === null || o[k] === undefined) continue;
+        const val = fmt(k, o[k]);
+        if (val !== '') lines.push(`${label(k)}: ${val}`);
+      }
+    } else if (log.action === 'updated' && c.old && c.new && typeof c.old === 'object' && typeof c.new === 'object') {
+      const oldO = c.old as Record<string, unknown>;
+      const newO = c.new as Record<string, unknown>;
+      const keys = new Set([...Object.keys(oldO), ...Object.keys(newO)]);
+      for (const k of keys) {
+        if (skip(k)) continue;
+        const oldVal = oldO[k];
+        const newVal = newO[k];
+        if (oldVal === newVal) continue;
+        const oldStr = fmt(k, oldVal);
+        const newStr = fmt(k, newVal);
+        lines.push(`${label(k)}: ${oldStr} → ${newStr}`);
+      }
+    } else if (log.action === 'deleted' && c.old && typeof c.old === 'object') {
+      const o = c.old as Record<string, unknown>;
+      for (const k of Object.keys(o)) {
+        if (skip(k) || o[k] === null || o[k] === undefined) continue;
+        const val = fmt(k, o[k]);
+        if (val !== '') lines.push(`${label(k)}: ${val}`);
+      }
+    }
+    return lines;
+  }
+
+  private formatChangeValue(key: string, v: unknown): string {
+    if (v === null || v === undefined) return '—';
+    if (typeof v === 'object' && v !== null && !Array.isArray(v)) {
+      const o = v as Record<string, unknown>;
+      if (typeof o['title'] === 'string') return o['title'];
+      if (typeof o['name'] === 'string') return o['name'];
+    }
+    if (key === 'value' && (typeof v === 'number' || typeof v === 'string')) {
+      const n = typeof v === 'string' ? parseFloat(v) : v;
+      if (!isNaN(n)) return `R$ ${this.formatBrazilianCurrency(n)}`;
+    }
+    if ((key === 'date' || key === 'due_date' || key === 'payment_date') && typeof v === 'string') {
+      const d = new Date(v);
+      if (!isNaN(d.getTime())) {
+        const day = String(d.getDate()).padStart(2, '0');
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const year = d.getFullYear();
+        return `${day}/${month}/${year}`;
+      }
+    }
+    if (key === 'type') {
+      const s = String(v).toLowerCase();
+      if (s === 'revenue' || s === 'receita') return 'Receita';
+      if (s === 'expense' || s === 'despesa') return 'Despesa';
+    }
+    if (key === 'status') {
+      const m: Record<string, string> = {
+        pending: 'Pendente',
+        paid: 'Pago',
+        overdue: 'Atrasado',
+        cancelled: 'Cancelado'
+      };
+      return m[String(v).toLowerCase()] ?? String(v);
+    }
+    if (key === 'periodicity') {
+      const m: Record<string, string> = {
+        daily: 'Diário',
+        weekly: 'Semanal',
+        monthly: 'Mensal',
+        annual: 'Anual'
+      };
+      return m[String(v).toLowerCase()] ?? String(v);
+    }
+    return String(v);
   }
 }

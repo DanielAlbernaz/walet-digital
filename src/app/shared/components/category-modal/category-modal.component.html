@@ -1,0 +1,73 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="onClose()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <!-- Modal Header -->
+    <div class="modal-header">
+      <h2 class="modal-title">{{ isEditing ? 'Editar Categoria' : 'Nova Categoria' }}</h2>
+      <button type="button" class="modal-close-button" (click)="onClose()" aria-label="Fechar">
+        <fa-icon [icon]="faTimes"></fa-icon>
+      </button>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="modal-body">
+      <form [formGroup]="categoryForm" class="category-form" (ngSubmit)="onSubmit()">
+        <!-- Nome da categoria -->
+        <div class="form-group">
+          <label class="form-label" for="title">Nome da categoria *</label>
+          <input
+            type="text"
+            id="title"
+            formControlName="title"
+            class="form-control"
+            placeholder="Ex: Alimentação, Transporte..."
+            [class.is-invalid]="categoryForm.get('title')?.invalid && categoryForm.get('title')?.touched">
+          <div *ngIf="categoryForm.get('title')?.invalid && categoryForm.get('title')?.touched" class="invalid-feedback">
+            <span *ngIf="categoryForm.get('title')?.errors?.['required']">O nome da categoria é obrigatório.</span>
+            <span *ngIf="categoryForm.get('title')?.errors?.['maxlength']">O nome deve ter no máximo 255 caracteres.</span>
+          </div>
+        </div>
+
+        <!-- Tipo (Receita/Despesa) -->
+        <div class="form-group">
+          <label class="form-label" for="type">Tipo *</label>
+          <select
+            id="type"
+            formControlName="type"
+            class="custom-select"
+            [class.is-invalid]="categoryForm.get('type')?.invalid && categoryForm.get('type')?.touched">
+            <option *ngFor="let option of typeOptions" [value]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+          <div *ngIf="categoryForm.get('type')?.invalid && categoryForm.get('type')?.touched" class="invalid-feedback">
+            <span *ngIf="categoryForm.get('type')?.errors?.['required']">O tipo é obrigatório.</span>
+          </div>
+        </div>
+
+        <!-- Status (Toggle) - Apenas ao editar -->
+        <div class="form-group" *ngIf="isEditing">
+          <label class="form-label">Status</label>
+          <label class="toggle-switch">
+            <input
+              type="checkbox"
+              formControlName="is_active"
+              (change)="onToggleChange($event)">
+            <span class="toggle-slider"></span>
+            <span class="toggle-label-text">{{ categoryForm.get('is_active')?.value ? 'Ativa' : 'Desativada' }}</span>
+          </label>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" (click)="onClose()" [disabled]="isLoading">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="categoryForm.invalid || isLoading">
+            <span *ngIf="isLoading">Salvando...</span>
+            <span *ngIf="!isLoading">Salvar</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

@@ -4,6 +4,71 @@
 /* Import Toastr Styles */
 @import 'ngx-toastr/toastr';
 
+/* Toastr Custom - Fixar no topo da viewport sempre visível */
+.toast-container {
+  position: fixed !important;
+  top: 20px !important;
+  right: 20px !important;
+  z-index: 9999 !important;
+  pointer-events: none;
+}
+
+.toast-container > div,
+.toast-container > ngb-toast {
+  pointer-events: auto;
+  position: relative !important;
+}
+
+.toast-container.toast-top-right {
+  position: fixed !important;
+  top: 20px !important;
+  right: 20px !important;
+  left: auto !important;
+  bottom: auto !important;
+}
+
+.toast-container.toast-top-center {
+  position: fixed !important;
+  top: 20px !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+  bottom: auto !important;
+}
+
+.toast-container.toast-top-left {
+  position: fixed !important;
+  top: 20px !important;
+  left: 20px !important;
+  right: auto !important;
+  bottom: auto !important;
+}
+
+.toast-container.toast-bottom-right {
+  position: fixed !important;
+  bottom: 20px !important;
+  right: 20px !important;
+  top: auto !important;
+  left: auto !important;
+}
+
+.toast-container.toast-bottom-center {
+  position: fixed !important;
+  bottom: 20px !important;
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+  top: auto !important;
+}
+
+.toast-container.toast-bottom-left {
+  position: fixed !important;
+  bottom: 20px !important;
+  left: 20px !important;
+  top: auto !important;
+  right: auto !important;
+}
+
 /* Estilos para modal de pagamento do SweetAlert */
 .payment-modal-popup {
   overflow-x: hidden !important;
@@ -90,6 +155,72 @@
   --ring: hsl(217, 91%, 53%);
 
   --radius: 0.75rem;
+}
+
+/* Select nativo customizado - estilo limpo e moderno (global) */
+.custom-select {
+  width: 100%;
+  padding: 10px 12px;
+  padding-right: 32px;
+  border: 1px solid var(--border, #e5e7eb);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+  color: var(--foreground, #1f2937);
+  background: var(--card, white);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  outline: none;
+}
+
+.custom-select:hover {
+  border-color: var(--muted-foreground, #9ca3af);
+}
+
+.custom-select:focus {
+  border-color: var(--primary, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.custom-select:disabled {
+  background-color: var(--accent, #f3f4f6);
+  color: var(--muted-foreground, #6b7280);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.custom-select[class*="input-error"] {
+  border-color: var(--destructive, #ef4444);
+}
+
+.custom-select[class*="input-error"]:focus {
+  border-color: var(--destructive, #ef4444);
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+/* Estilo para opções do select */
+.custom-select option {
+  padding: 8px 12px;
+  font-size: 14px;
+  color: var(--foreground, #1f2937);
+  background: var(--card, white);
+}
+
+.custom-select option:hover {
+  background: hsl(217, 92%, 95%);
+}
+
+.custom-select option:checked {
+  background: hsl(217, 92%, 95%);
+  color: #2563EB;
+  font-weight: 500;
 }
 
 /* Angular Material Select Custom Styles - Global Fallback */

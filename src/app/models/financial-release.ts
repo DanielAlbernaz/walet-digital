@@ -41,14 +41,9 @@ export interface CreateFinancialReleaseRequest {
   periodicity?: 'daily' | 'weekly' | 'monthly' | 'annual'; // Obrigatório se repetition = 'fixed'
 }
 
-export interface Category {
-  id: number;
-  title: string; // Backend retorna 'title', não 'name'
-  type: 'revenue' | 'expense' | 'receita' | 'despesa'; // Backend usa 'revenue'/'expense', frontend aceita ambos
-  user_id?: number | null; // null para categorias globais
-  created_at?: string;
-  updated_at?: string;
-}
+// Category interface moved to category.model.ts
+// Re-export for backward compatibility
+export { Category } from './category.model';
 
 // Interface para resposta paginada do Laravel
 export interface PaginatedResponse<T> {
@@ -89,6 +84,7 @@ export interface InstallmentSummary {
   first_date: string;
   last_date: string;
   created_at: string;
+  payment_method_id?: number | null; // ID do método de pagamento (opcional)
 }
 
 export interface InstallmentParcel {
@@ -100,9 +96,40 @@ export interface InstallmentParcel {
   payment_date: string | null;
   status: 'pending' | 'paid' | 'cancelled' | 'overdue';
   created_at: string;
+  payment_method_id?: number | null; // ID do método de pagamento (opcional)
 }
 
 export interface InstallmentDetails extends InstallmentSummary {
   observation: string | null;
   parcels: InstallmentParcel[];
+}
+
+/** Payload para edição em massa (PATCH /api/financial_release/bulk-update) */
+export interface BulkUpdateRequest {
+  ids: number[];
+  status?: 'pending' | 'paid' | 'overdue' | 'cancelled';
+  payment_date?: string; // YYYY-MM-DD
+  finance_account_id?: number;
+  category_id?: number;
+  payment_method_id?: number | null;
+}
+
+/** Resposta da edição em massa */
+export interface BulkUpdateResponse {
+  message: string;
+  count: number;
+  data: FinancialRelease[];
+}
+
+/** Criação em massa (ex.: importação OFX) */
+export interface BulkCreateFinancialReleaseRequest {
+  payment_method_id?: number | null;
+  releases: CreateFinancialReleaseRequest[];
+}
+
+export interface BulkCreateFinancialReleaseResponse {
+  message: string;
+  count: number;
+  data?: FinancialRelease[];
+  errors?: Array<{ index: number; message: string }>;
 }

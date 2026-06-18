@@ -11,8 +11,8 @@
 
     <!-- Add Button -->
     <div class="page-actions">
-      <button 
-        type="button" 
+      <button
+        type="button"
         class="btn-add"
         [class.btn-disabled]="!hasCustomPaymentMethodsFeature()"
         [disabled]="!hasCustomPaymentMethodsFeature()"
@@ -25,9 +25,14 @@
 
     <!-- Métodos Padrão -->
     <div class="methods-section" *ngIf="defaultMethods.length > 0">
-      <h3 class="section-title">Métodos Padrão</h3>
-      <div class="methods-grid">
-        <div *ngFor="let method of defaultMethods" class="method-card method-card-default">
+      <h3 class="section-title section-title-clickable" (click)="toggleDefaultMethods()">
+        <div class="section-title-left">
+          Métodos Padrão
+        </div>
+        <fa-icon [icon]="isDefaultMethodsExpanded ? faChevronUp : faChevronDown" class="section-title-chevron"></fa-icon>
+      </h3>
+      <div class="methods-list" *ngIf="isDefaultMethodsExpanded">
+        <div *ngFor="let method of defaultMethods" class="method-item method-item-default">
           <div class="method-icon">
             <fa-icon [icon]="getDefaultMethodIcon(method.name)"></fa-icon>
           </div>
@@ -42,8 +47,8 @@
     <!-- Meus Métodos -->
     <div class="methods-section" *ngIf="hasCustomPaymentMethodsFeature() && customMethods.length > 0">
       <h3 class="section-title">Meus Métodos</h3>
-      <div class="methods-grid">
-        <div *ngFor="let method of customMethods" class="method-card method-card-custom" (click)="onEditClick(method)">
+      <div class="methods-list">
+        <div *ngFor="let method of customMethods" class="method-item method-item-custom" (click)="onEditClick(method)">
           <div class="method-icon">
             <fa-icon [icon]="faWallet"></fa-icon>
           </div>
@@ -54,6 +59,9 @@
             <span class="method-badge" [ngClass]="method.is_active ? 'badge-active' : 'badge-inactive'">
               {{ method.is_active ? 'Ativo' : 'Desativado' }}
             </span>
+            <button type="button" class="btn-icon btn-disable" (click)="$event.stopPropagation(); onDisableClick(method)" [title]="method.is_active ? 'Desativar' : 'Ativar'">
+              <fa-icon [icon]="faPowerOff"></fa-icon>
+            </button>
             <button type="button" class="btn-icon btn-edit" (click)="$event.stopPropagation(); onEditClick(method)" title="Editar">
               <fa-icon [icon]="faEdit"></fa-icon>
             </button>
@@ -83,8 +91,8 @@
   </div>
 
   <ng-container *ngIf="hasCustomPaymentMethodsFeature()">
-    <app-floating-action-button 
-      *appPermission="'create'" 
+    <app-floating-action-button
+      *appPermission="'create'"
       (clicked)="onAddClick()">
     </app-floating-action-button>
   </ng-container>

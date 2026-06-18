@@ -1,0 +1,56 @@
+<div class="bulk-actions-bar" *ngIf="selectedCount > 0">
+  <div class="bulk-actions-info">
+    <span class="bulk-actions-count">{{ selectedCount }} {{ selectedCount === 1 ? 'item selecionado' : 'itens selecionados' }}</span>
+  </div>
+  <div class="bulk-actions-buttons">
+    <button
+      type="button"
+      class="bulk-action-btn primary"
+      [disabled]="isLoading"
+      (click)="markAsPaid.emit()">
+      {{ paidLabel }} (hoje)
+    </button>
+    <div class="bulk-action-date-wrap" *ngIf="showDateInput">
+      <input
+        type="date"
+        class="bulk-action-date"
+        [(ngModel)]="paymentDate"
+        (keydown.enter)="applyMarkAsPaidWithDate()">
+      <button type="button" class="bulk-action-btn small" (click)="applyMarkAsPaidWithDate()" [disabled]="!paymentDate || isLoading">
+        Aplicar
+      </button>
+    </div>
+    <button
+      *ngIf="!showDateInput"
+      type="button"
+      class="bulk-action-btn"
+      [disabled]="isLoading"
+      (click)="openDateInput()">
+      {{ paidLabel }} (escolher data)
+    </button>
+    <select
+      class="bulk-action-select"
+      (change)="onCategoryChange($event)"
+      [disabled]="isLoading || categories.length === 0"
+      [title]="categories.length === 0 ? 'Nenhuma categoria disponível' : 'Alterar categoria'">
+      <option value="">Alterar categoria</option>
+      <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.title }}</option>
+    </select>
+    <select
+      class="bulk-action-select"
+      (change)="onPaymentMethodChange($event)"
+      [disabled]="isLoading"
+      title="Alterar forma de pagamento">
+      <option value="">Alterar forma de pagamento</option>
+      <option *ngFor="let pm of paymentMethods" [value]="pm.id">{{ pm.name }}</option>
+      <option value="clear">Limpar forma de pagamento</option>
+    </select>
+    <button
+      type="button"
+      class="bulk-action-btn cancel"
+      [disabled]="isLoading"
+      (click)="cancelSelection.emit()">
+      Cancelar seleção
+    </button>
+  </div>
+</div>

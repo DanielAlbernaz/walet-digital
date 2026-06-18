@@ -10,14 +10,61 @@
       [type]="'despesa'">
     </app-financial-page-header>
 
+    <div class="despesas-actions">
+      <div class="export-dropdown">
+        <button type="button" class="btn-export" (click)="toggleExportMenu()">
+          <fa-icon [icon]="faFileExport"></fa-icon>
+          <span>Exportar</span>
+          <fa-icon [icon]="faChevronDown" class="chevron" [class.open]="isExportMenuOpen"></fa-icon>
+        </button>
+        <div class="export-menu" *ngIf="isExportMenuOpen">
+          <button type="button" class="export-option" (click)="exportExcel()">
+            <fa-icon [icon]="faFileExcel" class="opt-excel"></fa-icon>
+            <span>Excel (.xlsx)</span>
+          </button>
+          <button type="button" class="export-option" (click)="exportPdf()">
+            <fa-icon [icon]="faFilePdf" class="opt-pdf"></fa-icon>
+            <span>PDF</span>
+          </button>
+          <button type="button" class="export-option" (click)="exportCsv()">
+            <fa-icon [icon]="faFileCsv" class="opt-csv"></fa-icon>
+            <span>CSV</span>
+          </button>
+        </div>
+      </div>
+
+      <ng-container *appPermission="'create'">
+        <button type="button" class="btn-import-ofx" (click)="onOpenOfxImport()">
+          <fa-icon [icon]="faFileImport"></fa-icon>
+          <span>Importar OFX</span>
+        </button>
+        <button type="button" class="btn-import-pdf" (click)="onOpenPdfImport()">
+          <fa-icon [icon]="faFilePdf"></fa-icon>
+          <span>Importar PDF</span>
+        </button>
+      </ng-container>
+    </div>
+
+    <div class="export-backdrop" *ngIf="isExportMenuOpen" (click)="closeExportMenu()"></div>
+
     <!-- Month Selector -->
     <app-month-selector (monthChanged)="onMonthChanged($event)"></app-month-selector>
 
-    <!-- Search and Filter Bar -->
-    <app-financial-search-bar
-      [placeholder]="'Buscar despesas...'"
-      [(searchQuery)]="searchQuery">
-    </app-financial-search-bar>
+    <!-- Summary Cards -->
+    <app-filter-summary
+      [releases]="getFilteredReleasesForSummary()"
+      [type]="'despesa'">
+    </app-filter-summary>
+
+    <!-- Advanced Filters -->
+    <app-advanced-filters
+      [categories]="expenseCategories"
+      [paymentMethods]="paymentMethods"
+      [filters]="filters"
+      [sort]="sort"
+      (filtersChange)="onFiltersChange($event)"
+      (sortChange)="onSortChange($event)">
+    </app-advanced-filters>
 
     <!-- Empty States or List -->
     <div *ngIf="hasNoExpensesInMonth">
@@ -35,11 +82,28 @@
       </app-financial-empty-state>
     </div>
 
+    <app-bulk-actions-bar
+      *ngIf="filteredExpenses.length > 0"
+      [selectedCount]="selectedIds.length"
+      [type]="'despesa'"
+      [categories]="expenseCategories"
+      [paymentMethods]="paymentMethods"
+      [isLoading]="isLoadingBulk"
+      (cancelSelection)="onCancelSelection()"
+      (markAsPaid)="onBulkMarkAsPaid()"
+      (markAsPaidWithDate)="onBulkMarkAsPaidWithDate($event)"
+      (changeCategory)="onBulkChangeCategory($event)"
+      (changePaymentMethod)="onBulkChangePaymentMethod($event)">
+    </app-bulk-actions-bar>
+
     <app-financial-list
       *ngIf="filteredExpenses.length > 0"
       [items]="filteredExpenses"
       [type]="'despesa'"
-      (itemClick)="onExpenseClick($event)">
+      [selectionMode]="true"
+      [selectedIds]="selectedIds"
+      (itemClick)="onExpenseClick($event)"
+      (selectionChange)="onSelectionChange($event)">
     </app-financial-list>
   </div>
 
@@ -52,3 +116,21 @@
   (close)="onCloseModal()"
   (saved)="onTransactionSaved()">
 </app-transaction-modal>
+
+<app-ofx-import-modal
+  [isOpen]="isOfxImportOpen"
+  [defaultMonth]="selectedMonth"
+  [categories]="categories"
+  [paymentMethods]="paymentMethods"
+  (close)="onCloseOfxImport()"
+  (imported)="onOfxImported()">
+</app-ofx-import-modal>
+
+<app-pdf-import-modal
+  [isOpen]="isPdfImportOpen"
+  [defaultMonth]="selectedMonth"
+  [categories]="categories"
+  [paymentMethods]="paymentMethods"
+  (close)="onClosePdfImport()"
+  (imported)="onPdfImported()">
+</app-pdf-import-modal>

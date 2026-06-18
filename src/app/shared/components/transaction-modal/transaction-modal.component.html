@@ -2,9 +2,32 @@
   <div class="modal-container" (click)="$event.stopPropagation()">
     <!-- Modal Header -->
     <div class="modal-header">
-      <h2 class="modal-title">{{ releaseToEdit ? 'Editar Lançamento' : 'Novo Lançamento' }}</h2>
+      <div class="modal-header-text">
+        <h2 class="modal-title">{{ releaseToEdit ? 'Editar Lançamento' : 'Novo Lançamento' }}</h2>
+        <p class="modal-subtitle" *ngIf="releaseToEdit">Atualize os dados do lançamento ou visualize o histórico de alterações</p>
+      </div>
       <button type="button" class="modal-close-button" (click)="onClose()" aria-label="Fechar">
         <fa-icon [icon]="faTimes"></fa-icon>
+      </button>
+    </div>
+
+    <!-- Tabs (apenas ao editar) -->
+    <div class="modal-tabs" *ngIf="releaseToEdit">
+      <button
+        type="button"
+        class="modal-tab"
+        [class.modal-tab-active]="activeTab === 'dados'"
+        (click)="setActiveTab('dados')">
+        <fa-icon [icon]="faFileAlt" class="tab-icon"></fa-icon>
+        Dados
+      </button>
+      <button
+        type="button"
+        class="modal-tab"
+        [class.modal-tab-active]="activeTab === 'historico'"
+        (click)="setActiveTab('historico')">
+        <fa-icon [icon]="faHistory" class="tab-icon"></fa-icon>
+        Histórico
       </button>
     </div>
 
@@ -23,16 +46,26 @@
         {{ errorMessage }}
       </div>
 
-      <form [formGroup]="transactionForm" class="transaction-form" [style.opacity]="isLoading ? '0.5' : '1'" [style.pointer-events]="isLoading ? 'none' : 'auto'">
+      <!-- Aba Dados: formulário (sempre visível ao criar; ao editar, só quando aba Dados ativa) -->
+      <form
+        *ngIf="!releaseToEdit || activeTab === 'dados'"
+        [formGroup]="transactionForm"
+        class="transaction-form"
+        [style.opacity]="isLoading ? '0.5' : '1'"
+        [style.pointer-events]="isLoading ? 'none' : 'auto'">
         <!-- Tipo -->
         <div class="form-group">
-          <label class="form-label">Tipo</label>
-          <div class="type-selector">
+          <label class="form-label">
+            Tipo
+            <span class="required-asterisk">*</span>
+          </label>
+          <div class="type-selector" [title]="isPaidOrCancelled ? lockTooltip : (releaseToEdit ? 'Este campo só pode ser alterado na criação do lançamento para garantir a integridade dos dados' : '')">
             <button
               type="button"
               class="type-button"
               [class.type-button-active]="selectedType === 'receita'"
               [class.type-receita]="selectedType === 'receita'"
+              [disabled]="!!releaseToEdit || isPaidOrCancelled"
               (click)="selectType('receita')">
               Receita
             </button>
@@ -41,6 +74,7 @@
               class="type-button"
               [class.type-button-active]="selectedType === 'despesa'"
               [class.type-despesa]="selectedType === 'despesa'"
+              [disabled]="!!releaseToEdit || isPaidOrCancelled"
               (click)="selectType('despesa')">
               Despesa
             </button>
@@ -49,7 +83,10 @@
 
         <!-- Valor -->
         <div class="form-group">
-          <label class="form-label">Valor (R$)</label>
+          <label class="form-label">
+            Valor (R$)
+            <span class="required-asterisk">*</span>
+          </label>
           <input
             type="text"
             formControlName="value"
@@ -57,28 +94,37 @@
             placeholder="0,00"
             (input)="onValueInput($event)"
             (blur)="onValueBlur()"
+            [title]="isPaidOrCancelled ? lockTooltip : ''"
             [class.input-error]="transactionForm.get('value')?.invalid && transactionForm.get('value')?.touched">
           <span class="error-message" *ngIf="getFieldError('value')">{{ getFieldError('value') }}</span>
         </div>
 
         <!-- Data de Competência -->
         <div class="form-group">
-          <label class="form-label">Data de Competência</label>
+          <label class="form-label">
+            Data de Competência
+            <span class="required-asterisk">*</span>
+          </label>
           <input
             type="date"
             formControlName="competenceDate"
             class="form-input"
+            [title]="isPaidOrCancelled ? lockTooltip : ''"
             [class.input-error]="transactionForm.get('competenceDate')?.invalid && transactionForm.get('competenceDate')?.touched">
           <span class="error-message" *ngIf="getFieldError('competenceDate')">{{ getFieldError('competenceDate') }}</span>
         </div>
 
         <!-- Data de Vencimento -->
         <div class="form-group">
-          <label class="form-label">Data de Vencimento</label>
+          <label class="form-label">
+            Data de Vencimento
+            <span class="required-asterisk">*</span>
+          </label>
           <input
             type="date"
             formControlName="dueDate"
             class="form-input"
+            [title]="isPaidOrCancelled ? lockTooltip : ''"
             [class.input-error]="transactionForm.get('dueDate')?.invalid && transactionForm.get('dueDate')?.touched">
           <span class="error-message" *ngIf="getFieldError('dueDate')">{{ getFieldError('dueDate') }}</span>
         </div>
@@ -88,99 +134,116 @@
           <label class="form-label">
             Data de Pagamento
             <span *ngIf="transactionForm.get('status')?.value === 'paid'" class="required-asterisk">*</span>
-            <span *ngIf="transactionForm.get('status')?.value !== 'paid'" class="optional-label">(opcional)</span>
           </label>
           <input
             type="date"
             formControlName="paymentDate"
             class="form-input"
+            [title]="isPaidOrCancelled ? lockTooltip : ''"
             [class.input-error]="transactionForm.get('paymentDate')?.invalid && transactionForm.get('paymentDate')?.touched">
           <span class="error-message" *ngIf="getFieldError('paymentDate')">{{ getFieldError('paymentDate') }}</span>
         </div>
 
         <!-- Descrição -->
         <div class="form-group">
-          <label class="form-label">Descrição</label>
+          <label class="form-label">
+            Descrição
+            <span class="required-asterisk">*</span>
+          </label>
           <input
             type="text"
             formControlName="description"
             class="form-input"
             placeholder="Ex: Aluguel, Salário..."
+            [title]="isPaidOrCancelled ? lockTooltip : ''"
             [class.input-error]="transactionForm.get('description')?.invalid && transactionForm.get('description')?.touched">
           <span class="error-message" *ngIf="getFieldError('description')">{{ getFieldError('description') }}</span>
         </div>
 
         <!-- Categoria -->
         <div class="form-group">
-          <label class="form-label">Categoria</label>
-          <mat-form-field appearance="outline" class="custom-form-field">
-            <mat-select
-              formControlName="category"
-              placeholder=""
-              [class.input-error]="transactionForm.get('category')?.invalid && transactionForm.get('category')?.touched">
-              <mat-option *ngIf="isLoadingCategories" disabled>
-                Carregando categorias...
-              </mat-option>
-              <mat-option *ngFor="let category of filteredCategories" [value]="category.id">
+          <label class="form-label">
+            Categoria
+            <span class="required-asterisk">*</span>
+          </label>
+          <select
+            class="custom-select"
+            formControlName="category"
+            [title]="isPaidOrCancelled ? lockTooltip : ''"
+            [class.input-error]="transactionForm.get('category')?.invalid && transactionForm.get('category')?.touched">
+            <option value="" disabled *ngIf="!isLoadingCategories">Selecione uma categoria</option>
+            <option value="" disabled *ngIf="isLoadingCategories">Carregando categorias...</option>
+            <optgroup label="Categorias Padrão" *ngIf="defaultFilteredCategories.length > 0">
+              <option *ngFor="let category of defaultFilteredCategories" [value]="category.id">
                 {{ category.title }}
-              </mat-option>
-            </mat-select>
-            <mat-error *ngIf="transactionForm.get('category')?.invalid && transactionForm.get('category')?.touched">
-              {{ getFieldError('category') }}
-            </mat-error>
-          </mat-form-field>
+              </option>
+            </optgroup>
+            <optgroup label="Minhas Categorias" *ngIf="customFilteredCategories.length > 0">
+              <option *ngFor="let category of customFilteredCategories" [value]="category.id">
+                {{ category.title }}
+              </option>
+            </optgroup>
+          </select>
+          <span class="error-message" *ngIf="getFieldError('category')">{{ getFieldError('category') }}</span>
         </div>
 
         <!-- Método de Pagamento -->
         <div class="form-group">
-          <label class="form-label">Forma de Pagamento <span class="optional-label">(opcional)</span></label>
-          <mat-form-field appearance="outline" class="custom-form-field">
-            <mat-select formControlName="payment_method" placeholder="">
-              <mat-option [value]="null">Selecione uma forma de pagamento (opcional)</mat-option>
-              <mat-optgroup label="Métodos Padrão" *ngIf="defaultPaymentMethods.length > 0">
-                <mat-option *ngFor="let method of defaultPaymentMethods" [value]="method.id">
-                  {{ method.name }}
-                </mat-option>
-              </mat-optgroup>
-              <mat-optgroup label="Meus Métodos" *ngIf="customPaymentMethods.length > 0">
-                <mat-option *ngFor="let method of customPaymentMethods" [value]="method.id">
-                  {{ method.name }}
-                </mat-option>
-              </mat-optgroup>
-            </mat-select>
-          </mat-form-field>
+          <label class="form-label">Forma de Pagamento</label>
+          <select class="custom-select" formControlName="payment_method" [title]="isPaidOrCancelled ? lockTooltip : ''">
+            <option [value]="null">Selecione uma forma de pagamento (opcional)</option>
+            <optgroup label="Métodos Padrão" *ngIf="defaultPaymentMethods.length > 0">
+              <option *ngFor="let method of defaultPaymentMethods" [value]="method.id">
+                {{ method.name }}
+              </option>
+            </optgroup>
+            <optgroup label="Meus Métodos" *ngIf="customPaymentMethods.length > 0">
+              <option *ngFor="let method of customPaymentMethods" [value]="method.id">
+                {{ method.name }}
+              </option>
+            </optgroup>
+          </select>
         </div>
 
         <!-- Status -->
         <div class="form-group">
-          <label class="form-label">Status</label>
-          <mat-form-field appearance="outline" class="custom-form-field">
-            <mat-select formControlName="status" placeholder="">
-              <mat-option *ngFor="let option of statusOptions" [value]="option.value">
-                {{ option.label }}
-              </mat-option>
-            </mat-select>
-            <mat-error *ngIf="transactionForm.get('status')?.invalid && transactionForm.get('status')?.touched">
-              {{ getFieldError('status') }}
-            </mat-error>
-          </mat-form-field>
+          <label class="form-label">
+            Status
+            <span class="required-asterisk">*</span>
+          </label>
+          <select
+            class="custom-select"
+            formControlName="status"
+            [class.input-error]="transactionForm.get('status')?.invalid && transactionForm.get('status')?.touched">
+            <option *ngFor="let option of statusOptions" [value]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+          <span class="error-message" *ngIf="getFieldError('status')">{{ getFieldError('status') }}</span>
         </div>
 
         <!-- Repetição -->
         <div class="form-group">
-          <label class="form-label">Repetição</label>
-          <mat-form-field appearance="outline" class="custom-form-field">
-            <mat-select formControlName="repetition" placeholder="">
-              <mat-option *ngFor="let option of repetitionOptions" [value]="option.value">
-                {{ option.label }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+          <label class="form-label">
+            Repetição
+            <span class="required-asterisk">*</span>
+          </label>
+          <select
+            class="custom-select"
+            formControlName="repetition"
+            [title]="releaseToEdit ? 'Este campo só pode ser alterado na criação do lançamento para garantir a integridade dos dados' : ''">
+            <option *ngFor="let option of repetitionOptions" [value]="option.value">
+              {{ option.label }}
+            </option>
+          </select>
         </div>
 
         <!-- Quantidade de Parcelas (mostrar apenas quando Parcelado estiver selecionado) -->
         <div class="form-group" *ngIf="isInstallmentsSelected">
-          <label class="form-label">Quantidade de Parcelas</label>
+          <label class="form-label">
+            Quantidade de Parcelas
+            <span class="required-asterisk">*</span>
+          </label>
           <input
             type="number"
             formControlName="number_installments_repetition"
@@ -188,6 +251,7 @@
             placeholder="Ex: 12"
             min="2"
             max="240"
+            [title]="releaseToEdit ? 'Este campo só pode ser alterado na criação do lançamento para garantir a integridade dos dados' : ''"
             [class.input-error]="transactionForm.get('number_installments_repetition')?.invalid && transactionForm.get('number_installments_repetition')?.touched">
           <span class="error-message" *ngIf="getFieldError('number_installments_repetition')">{{ getFieldError('number_installments_repetition') }}</span>
           <small class="form-hint">O valor total será dividido igualmente entre as parcelas</small>
@@ -195,7 +259,10 @@
 
         <!-- Campos para Recorrência (mostrar apenas quando Recorrente estiver selecionado) -->
         <div *ngIf="isFixedSelected" class="form-group">
-          <label class="form-label">Número de Repetições</label>
+          <label class="form-label">
+            Número de Repetições
+            <span class="required-asterisk">*</span>
+          </label>
           <input
             type="number"
             formControlName="number_repetition"
@@ -203,45 +270,86 @@
             placeholder="Ex: 12"
             min="1"
             max="240"
+            [title]="releaseToEdit ? 'Este campo só pode ser alterado na criação do lançamento para garantir a integridade dos dados' : ''"
             [class.input-error]="transactionForm.get('number_repetition')?.invalid && transactionForm.get('number_repetition')?.touched">
           <span class="error-message" *ngIf="getFieldError('number_repetition')">{{ getFieldError('number_repetition') }}</span>
         </div>
 
         <div class="form-group" *ngIf="isFixedSelected">
-          <label class="form-label">Frequência</label>
-          <mat-form-field appearance="outline" class="custom-form-field">
-            <mat-select formControlName="periodicity" placeholder="">
-              <mat-option value="daily">Diário</mat-option>
-              <mat-option value="weekly">Semanal</mat-option>
-              <mat-option value="monthly">Mensal</mat-option>
-              <mat-option value="annual">Anual</mat-option>
-            </mat-select>
-            <mat-error *ngIf="transactionForm.get('periodicity')?.invalid && transactionForm.get('periodicity')?.touched">
-              {{ getFieldError('periodicity') }}
-            </mat-error>
-          </mat-form-field>
+          <label class="form-label">
+            Frequência
+            <span class="required-asterisk">*</span>
+          </label>
+          <select
+            class="custom-select"
+            formControlName="periodicity"
+            [title]="releaseToEdit ? 'Este campo só pode ser alterado na criação do lançamento para garantir a integridade dos dados' : ''"
+            [class.input-error]="transactionForm.get('periodicity')?.invalid && transactionForm.get('periodicity')?.touched">
+            <option value="daily">Diário</option>
+            <option value="weekly">Semanal</option>
+            <option value="monthly">Mensal</option>
+            <option value="annual">Anual</option>
+          </select>
+          <span class="error-message" *ngIf="getFieldError('periodicity')">{{ getFieldError('periodicity') }}</span>
           <small class="form-hint">O mesmo valor será repetido em cada lançamento</small>
         </div>
 
-        <!-- Observação (opcional) -->
+        <!-- Observação -->
         <div class="form-group">
-          <label class="form-label">Observação (opcional)</label>
+          <label class="form-label">Observação</label>
           <textarea
             formControlName="observation"
             class="form-textarea"
             rows="4"
-            placeholder="Adicione uma observação...">
+            placeholder="Adicione uma observação..."
+            [title]="isPaidOrCancelled ? lockTooltip : ''">
           </textarea>
         </div>
       </form>
+
+      <!-- Aba Histórico: timeline de logs (apenas ao editar) -->
+      <div *ngIf="releaseToEdit && activeTab === 'historico'" class="history-tab">
+        <div *ngIf="isLoadingLogs" class="history-loading">
+          <i class="fas fa-wallet modal-loading-icon"></i>
+          <p class="modal-loading-text">Carregando histórico...</p>
+        </div>
+        <div *ngIf="!isLoadingLogs && activityLogs.length === 0" class="history-empty">
+          <fa-icon [icon]="faHistory" class="history-empty-icon"></fa-icon>
+          <p>Nenhum registro no histórico deste lançamento.</p>
+        </div>
+        <div *ngIf="!isLoadingLogs && activityLogs.length > 0" class="history-timeline">
+          <div *ngFor="let log of activityLogs; let last = last; trackBy: trackByLogId" class="timeline-item">
+            <div class="timeline-marker" [ngClass]="'timeline-marker-' + log.action">
+              <fa-icon [icon]="getLogIcon(log.action)"></fa-icon>
+            </div>
+            <div class="timeline-connector" *ngIf="!last"></div>
+            <div class="timeline-card">
+              <div class="timeline-card-header" [ngClass]="'timeline-card-header-' + log.action">
+                <span class="timeline-badge" [ngClass]="'timeline-badge-' + log.action">{{ getActionLabel(log.action) }}</span>
+                <span class="timeline-date">{{ formatLogDate(log.created_at_formatted || log.created_at) }}</span>
+              </div>
+              <div class="timeline-user">
+                <fa-icon [icon]="faUser" class="timeline-user-icon"></fa-icon>
+                <span>{{ log.user.name || 'Usuário' }}</span>
+              </div>
+              <div *ngIf="getChangesSummary(log).length" class="timeline-changes">
+                <div class="timeline-changes-title">{{ log.action === 'created' ? 'Campos preenchidos:' : (log.action === 'updated' ? 'Alterações:' : 'Campos excluídos:') }}</div>
+                <ul class="timeline-changes-list">
+                  <li *ngFor="let line of getChangesSummary(log)">{{ line }}</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Modal Footer -->
     <div class="modal-footer">
       <div class="footer-left">
-        <!-- Botão Pagar (apenas quando estiver editando e não estiver pago) -->
+        <!-- Botão Pagar (apenas na aba Dados, editando e não pago) -->
         <button
-          *ngIf="releaseToEdit && canPay"
+          *ngIf="releaseToEdit && canPay && activeTab === 'dados'"
           type="button"
           class="btn btn-pay"
           (click)="onPay()"
@@ -250,9 +358,9 @@
           <span>Pagar</span>
         </button>
 
-        <!-- Botão Excluir (soft delete) (apenas quando estiver editando e puder deletar) -->
+        <!-- Botão Excluir (apenas na aba Dados, editando e podendo deletar) -->
         <button
-          *ngIf="releaseToEdit && canDelete"
+          *ngIf="releaseToEdit && canDelete && activeTab === 'dados'"
           type="button"
           class="btn btn-delete"
           (click)="onDelete()"
@@ -264,7 +372,12 @@
 
       <div class="footer-actions">
         <button type="button" class="btn btn-cancel" (click)="onClose()" [disabled]="isLoading">Fechar</button>
-        <button type="button" class="btn btn-save" (click)="onSave()" [disabled]="isLoading || transactionForm.invalid">
+        <button
+          *ngIf="activeTab === 'dados'"
+          type="button"
+          class="btn btn-save"
+          (click)="onSave()"
+          [disabled]="isLoading || transactionForm.invalid">
           <span *ngIf="isLoading && !releaseToEdit">Salvando...</span>
           <span *ngIf="isLoading && releaseToEdit">Salvando...</span>
           <span *ngIf="!isLoading && !releaseToEdit">Salvar</span>

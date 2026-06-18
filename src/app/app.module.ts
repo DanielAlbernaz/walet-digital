@@ -30,8 +30,20 @@ import { DespesasComponent } from './pages/despesas/despesas.component';
 import { ContasAPagarComponent } from './pages/contas-a-pagar/contas-a-pagar.component';
 import { CartaoParcelasComponent } from './pages/cartao-parcelas/cartao-parcelas.component';
 import { MetodosPagamentoComponent } from './pages/metodos-pagamento/metodos-pagamento.component';
+import { CategoriasComponent } from './pages/categorias/categorias.component';
+import { RelatoriosComponent } from './pages/relatorios/relatorios.component';
 import { ConfiguracoesComponent } from './pages/configuracoes/configuracoes.component';
+import { PlanejamentoComponent } from './pages/planejamento/planejamento.component';
+import { PlanningDashboardComponent } from './pages/planejamento/planning-dashboard/planning-dashboard.component';
+import { DiagnosticoComponent } from './pages/planejamento/diagnostico/diagnostico.component';
+import { PlanoReducaoComponent } from './pages/planejamento/plano-reducao/plano-reducao.component';
+import { ProjecoesComponent } from './pages/planejamento/projecoes/projecoes.component';
+import { QuitacaoDividasComponent } from './pages/planejamento/quitacao-dividas/quitacao-dividas.component';
+import { MetasComponent } from './pages/planejamento/metas/metas.component';
+import { ChatIaComponent } from './pages/planejamento/chat-ia/chat-ia.component';
+import { ScoreGaugeComponent } from './shared/components/score-gauge/score-gauge.component';
 import { PaymentMethodModalComponent } from './shared/components/payment-method-modal/payment-method-modal.component';
+import { CategoryModalComponent } from './shared/components/category-modal/category-modal.component';
 import { FloatingActionButtonComponent } from './shared/components/floating-action-button/floating-action-button.component';
 import { TransactionModalComponent } from './shared/components/transaction-modal/transaction-modal.component';
 import { UpgradeModalComponent } from './shared/components/upgrade-modal/upgrade-modal.component';
@@ -41,6 +53,12 @@ import { FinancialPageHeaderComponent } from './shared/components/financial-page
 import { FinancialSearchBarComponent } from './shared/components/financial-search-bar/financial-search-bar.component';
 import { FinancialListComponent } from './shared/components/financial-list/financial-list.component';
 import { FinancialEmptyStateComponent } from './shared/components/financial-empty-state/financial-empty-state.component';
+import { FilterSummaryComponent } from './shared/components/filter-summary/filter-summary.component';
+import { AdvancedFiltersComponent } from './shared/components/advanced-filters/advanced-filters.component';
+import { BulkActionsBarComponent } from './shared/components/bulk-actions-bar/bulk-actions-bar.component';
+import { OfxImportModalComponent } from './shared/components/ofx-import-modal/ofx-import-modal.component';
+import { PdfImportModalComponent } from './shared/components/pdf-import-modal/pdf-import-modal.component';
+import { BaseChartDirective, provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
@@ -68,8 +86,20 @@ import { ToastrModule } from 'ngx-toastr';
     ContasAPagarComponent,
     CartaoParcelasComponent,
     MetodosPagamentoComponent,
+    CategoriasComponent,
+    RelatoriosComponent,
     ConfiguracoesComponent,
+    PlanejamentoComponent,
+    PlanningDashboardComponent,
+    DiagnosticoComponent,
+    PlanoReducaoComponent,
+    ProjecoesComponent,
+    QuitacaoDividasComponent,
+    MetasComponent,
+    ChatIaComponent,
+    ScoreGaugeComponent,
     PaymentMethodModalComponent,
+    CategoryModalComponent,
     FloatingActionButtonComponent,
     TransactionModalComponent,
     UpgradeModalComponent,
@@ -79,6 +109,11 @@ import { ToastrModule } from 'ngx-toastr';
     FinancialSearchBarComponent,
     FinancialListComponent,
     FinancialEmptyStateComponent,
+    FilterSummaryComponent,
+    AdvancedFiltersComponent,
+    BulkActionsBarComponent,
+    OfxImportModalComponent,
+    PdfImportModalComponent,
     RoleDirective,
     PermissionDirective,
     FeatureDirective
@@ -106,15 +141,20 @@ import { ToastrModule } from 'ngx-toastr';
       closeButton: true,
       tapToDismiss: true,
       preventDuplicates: true,
-      maxOpened: 5
-    })
+      maxOpened: 5,
+      enableHtml: false,
+      newestOnTop: true,
+      extendedTimeOut: 1000
+    }),
+    BaseChartDirective
   ],
   providers: [
     {
       provide: HTTP_INTERCEPTORS,
       useClass: AuthInterceptor,
       multi: true
-    }
+    },
+    provideCharts(withDefaultRegisterables())
   ],
   bootstrap: [AppComponent]
 })

@@ -51,66 +51,111 @@
     font-weight: 600;
     color: #1f2937;
     margin: 0 0 16px 0;
-  }
+    display: flex;
+    align-items: center;
+    gap: 8px;
 
-  .methods-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 16px;
+    &.section-title-clickable {
+      cursor: pointer;
+      user-select: none;
+      padding: 12px 16px;
+      margin: 0 0 8px 0;
+      border-radius: 8px;
+      transition: all 0.2s ease;
+      justify-content: space-between;
+      background: white;
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 
-    @media (max-width: 768px) {
-      grid-template-columns: 1fr;
+      &:hover {
+        background: #f9fafb;
+        border-color: #d1d5db;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+        transform: translateY(-1px);
+      }
+
+      &:active {
+        background: #f3f4f6;
+        border-color: #9ca3af;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        transform: translateY(0);
+      }
+
+      .section-title-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .section-title-chevron {
+        font-size: 16px;
+        color: #6b7280;
+        transition: transform 0.2s ease;
+      }
     }
   }
 
-  .method-card {
+  .methods-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  .method-item {
     display: flex;
     align-items: center;
     gap: 16px;
-    padding: 16px;
+    padding: 12px 16px;
     background: white;
-    border: 1px solid #e5e7eb;
     border-radius: 8px;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     transition: all 0.2s ease;
+    border: 1px solid #e5e7eb;
 
     // Estilo para métodos padrão (não clicáveis)
-    &.method-card-default {
-      cursor: not-allowed;
+    &.method-item-default {
+      cursor: default;
+      border-color: #e5e7eb;
 
       &:hover {
-        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        background: #f9fafb;
+        border-color: #d1d5db;
       }
     }
 
     // Estilo para métodos personalizados (clicáveis)
-    &.method-card-custom {
+    &.method-item-custom {
       cursor: pointer;
+      border-color: #e5e7eb;
 
       &:hover {
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-        border-color: #3b82f6;
-        transform: translateY(-2px);
         background: #f8fafc;
+        border-color: #3b82f6;
+        box-shadow: 0 1px 3px rgba(59, 130, 246, 0.1);
       }
 
       &:active {
-        transform: translateY(0);
+        background: #f1f5f9;
+        border-color: #2563eb;
       }
     }
 
     .method-icon {
-      width: 48px;
-      height: 48px;
+      width: 40px;
+      height: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 50%;
+      border-radius: 8px;
       background: #e0f2fe;
       flex-shrink: 0;
 
       fa-icon {
-        font-size: 24px;
+        font-size: 20px;
         color: #94a3b8;
       }
     }
@@ -118,10 +163,13 @@
     .method-info {
       flex: 1;
       min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
 
       .method-name {
         font-size: 15px;
-        font-weight: 600;
+        font-weight: 500;
         color: #1f2937;
         margin: 0;
       }
@@ -133,8 +181,8 @@
     }
 
     .method-badge {
-      padding: 6px 12px;
-      border-radius: 20px;
+      padding: 4px 10px;
+      border-radius: 6px;
       font-size: 12px;
       font-weight: 500;
       white-space: nowrap;
@@ -172,6 +220,16 @@
         cursor: pointer;
         transition: all 0.2s ease;
         padding: 0;
+
+        &.btn-disable {
+          color: #f59e0b;
+          border-color: #fcd34d;
+
+          &:hover {
+            background: #fef3c7;
+            border-color: #f59e0b;
+          }
+        }
 
         &.btn-edit {
           color: #3b82f6;

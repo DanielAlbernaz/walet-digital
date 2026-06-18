@@ -13,11 +13,21 @@
     <!-- Month Selector -->
     <app-month-selector (monthChanged)="onMonthChanged($event)"></app-month-selector>
 
-    <!-- Search and Filter Bar -->
-    <app-financial-search-bar
-      [placeholder]="'Buscar receitas...'"
-      [(searchQuery)]="searchQuery">
-    </app-financial-search-bar>
+    <!-- Summary Cards -->
+    <app-filter-summary
+      [releases]="getFilteredReleasesForSummary()"
+      [type]="'receita'">
+    </app-filter-summary>
+
+    <!-- Advanced Filters -->
+    <app-advanced-filters
+      [categories]="incomeCategories"
+      [paymentMethods]="paymentMethods"
+      [filters]="filters"
+      [sort]="sort"
+      (filtersChange)="onFiltersChange($event)"
+      (sortChange)="onSortChange($event)">
+    </app-advanced-filters>
 
     <!-- Empty States or List -->
     <div *ngIf="hasNoIncomesInMonth">
@@ -35,11 +45,28 @@
       </app-financial-empty-state>
     </div>
 
+    <app-bulk-actions-bar
+      *ngIf="filteredIncomes.length > 0"
+      [selectedCount]="selectedIds.length"
+      [type]="'receita'"
+      [categories]="incomeCategories"
+      [paymentMethods]="paymentMethods"
+      [isLoading]="isLoadingBulk"
+      (cancelSelection)="onCancelSelection()"
+      (markAsPaid)="onBulkMarkAsPaid()"
+      (markAsPaidWithDate)="onBulkMarkAsPaidWithDate($event)"
+      (changeCategory)="onBulkChangeCategory($event)"
+      (changePaymentMethod)="onBulkChangePaymentMethod($event)">
+    </app-bulk-actions-bar>
+
     <app-financial-list
       *ngIf="filteredIncomes.length > 0"
       [items]="filteredIncomes"
       [type]="'receita'"
-      (itemClick)="onIncomeClick($event)">
+      [selectionMode]="true"
+      [selectedIds]="selectedIds"
+      (itemClick)="onIncomeClick($event)"
+      (selectionChange)="onSelectionChange($event)">
     </app-financial-list>
   </div>
 

@@ -37,6 +37,10 @@ export class ApiService {
     return this.http.put<T>(`${this.baseApiUrl}${url}`, body);
   }
 
+  patch<T>(url: string, body: any): Observable<T> {
+    return this.http.patch<T>(`${this.baseApiUrl}${url}`, body);
+  }
+
   delete<T>(url: string): Observable<T> {
     return this.http.delete<T>(`${this.baseApiUrl}${url}`);
   }

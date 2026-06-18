@@ -1,0 +1,176 @@
+<form [formGroup]="filterForm" class="advanced-filters">
+  <!-- Search and Filter Toggle -->
+  <div class="filters-header">
+    <div class="search-wrapper">
+      <fa-icon [icon]="faSearch" class="search-icon"></fa-icon>
+      <input
+        type="text"
+        class="search-input"
+        formControlName="search"
+        placeholder="Buscar por descrição, observação ou categoria..."
+      />
+    </div>
+    <button
+      type="button"
+      class="filter-toggle-btn"
+      [class.active]="isExpanded"
+      (click)="toggleExpanded()">
+      <fa-icon [icon]="faFilter"></fa-icon>
+      <span>Filtros</span>
+      <span *ngIf="activeFiltersCount > 0" class="filter-badge">{{ activeFiltersCount }}</span>
+      <fa-icon [icon]="isExpanded ? faChevronUp : faChevronDown"></fa-icon>
+    </button>
+  </div>
+
+  <!-- Expanded Filters -->
+  <div *ngIf="isExpanded" class="filters-panel">
+    <!-- Date Filters Row -->
+    <div class="filters-row">
+      <!-- Competence Date Range -->
+      <div class="filter-group">
+        <label class="filter-label">Data de Competência</label>
+        <div class="date-range">
+          <input
+            type="date"
+            class="date-input"
+            formControlName="dateFrom"
+            placeholder="De"
+          />
+          <input
+            type="date"
+            class="date-input"
+            formControlName="dateTo"
+            placeholder="Até"
+          />
+        </div>
+      </div>
+
+      <!-- Payment Date Range -->
+      <div class="filter-group">
+        <label class="filter-label">Data de Pagamento</label>
+        <div class="date-range">
+          <input
+            type="date"
+            class="date-input"
+            formControlName="paymentDateFrom"
+            placeholder="De"
+          />
+          <input
+            type="date"
+            class="date-input"
+            formControlName="paymentDateTo"
+            placeholder="Até"
+          />
+        </div>
+      </div>
+
+      <!-- Value Range -->
+      <div class="filter-group">
+        <label class="filter-label">Faixa de Valor</label>
+        <div class="value-range">
+          <input
+            type="number"
+            class="value-input"
+            formControlName="valueMin"
+            placeholder="Mín"
+            step="0.01"
+          />
+          <input
+            type="number"
+            class="value-input"
+            formControlName="valueMax"
+            placeholder="Máx"
+            step="0.01"
+          />
+        </div>
+      </div>
+    </div>
+
+    <!-- Select Filters Row -->
+    <div class="filters-row">
+      <!-- Status -->
+      <div class="filter-group">
+        <label class="filter-label">Status</label>
+        <select class="custom-select" formControlName="status">
+          <option *ngFor="let option of statusOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Category -->
+      <div class="filter-group">
+        <label class="filter-label">Categoria</label>
+        <select class="custom-select" formControlName="categoryId">
+          <option value="all">Todas</option>
+          <optgroup label="Categorias Padrão" *ngIf="defaultCategories.length > 0">
+            <option *ngFor="let category of defaultCategories" [value]="category.id.toString()">
+              {{ category.title }}
+            </option>
+          </optgroup>
+          <optgroup label="Minhas Categorias" *ngIf="customCategories.length > 0">
+            <option *ngFor="let category of customCategories" [value]="category.id.toString()">
+              {{ category.title }}
+            </option>
+          </optgroup>
+        </select>
+      </div>
+
+      <!-- Payment Method -->
+      <div class="filter-group">
+        <label class="filter-label">Método de Pagamento</label>
+        <select class="custom-select" formControlName="paymentMethodId">
+          <option value="all">Todos</option>
+          <optgroup label="Métodos Padrão" *ngIf="defaultPaymentMethods.length > 0">
+            <option *ngFor="let method of defaultPaymentMethods" [value]="method.id.toString()">
+              {{ method.name }}
+            </option>
+          </optgroup>
+          <optgroup label="Meus Métodos" *ngIf="customPaymentMethods.length > 0">
+            <option *ngFor="let method of customPaymentMethods" [value]="method.id.toString()">
+              {{ method.name }}
+            </option>
+          </optgroup>
+        </select>
+      </div>
+
+      <!-- Installment Filter -->
+      <div class="filter-group">
+        <label class="filter-label">Tipo de Lançamento</label>
+        <select class="custom-select" formControlName="hasInstallment">
+          <option *ngFor="let option of installmentOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Sort and Clear -->
+    <div class="filters-footer">
+      <div class="sort-controls">
+        <label class="sort-label">Ordenar por:</label>
+        <select class="custom-select sort-field" [value]="sort.field" (change)="onSortFieldChange($any($event.target).value)">
+          <option *ngFor="let option of sortFieldOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <button
+          type="button"
+          class="sort-direction-btn"
+          (click)="onSortDirectionToggle()"
+          [title]="sort.direction === 'asc' ? 'Crescente' : 'Decrescente'">
+          <fa-icon [icon]="sort.direction === 'asc' ? faChevronUp : faChevronDown"></fa-icon>
+        </button>
+      </div>
+
+      <button
+        *ngIf="hasActiveFilters"
+        type="button"
+        class="clear-filters-btn"
+        (click)="clearFilters()">
+        <fa-icon [icon]="faX"></fa-icon>
+        <span>Limpar filtros</span>
+      </button>
+    </div>
+  </div>
+</form>

@@ -1,0 +1,207 @@
+<div class="modal-overlay" *ngIf="isOpen" (click)="onClose()">
+<div class="modal-container" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="modal-header-text">
+        <h2 class="modal-title">
+          <fa-icon [icon]="faFilePdf"></fa-icon>
+          Importar despesas (PDF)
+        </h2>
+        <p class="modal-subtitle" *ngIf="step === 'upload'">
+          Selecione o mês, a forma de pagamento e a fatura PDF (Itaú ou BV Financeira)
+        </p>
+        <p class="modal-subtitle" *ngIf="step === 'preview'">
+          Lançamentos serão criados em <strong>{{ getTargetMonthLabel() }}</strong> — revise, categorize e exclua antes de criar
+        </p>
+      </div>
+      <button type="button" class="modal-close-button" (click)="onClose()" [disabled]="isSubmitting">
+        <fa-icon [icon]="faTimes"></fa-icon>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div *ngIf="step === 'upload'" class="upload-step">
+        <div class="form-grid">
+          <div class="form-field">
+            <label>
+              <fa-icon [icon]="faCalendar"></fa-icon>
+              Mês de competência <span class="required">*</span>
+            </label>
+            <input
+              type="month"
+              class="month-input"
+              [(ngModel)]="selectedTargetMonth"
+              (ngModelChange)="onTargetMonthChange()" />
+          </div>
+
+          <div class="form-field">
+            <label>
+              <fa-icon [icon]="faCreditCard"></fa-icon>
+              Forma de pagamento <span class="required">*</span>
+            </label>
+            <select [(ngModel)]="selectedPaymentMethodId">
+              <option [ngValue]="null">Selecione...</option>
+              <option *ngFor="let pm of paymentMethods" [ngValue]="pm.id">{{ pm.name }}</option>
+            </select>
+          </div>
+
+          <div class="form-field">
+            <label>Categoria padrão (opcional)</label>
+            <select [(ngModel)]="defaultCategoryId">
+              <option [ngValue]="null">Nenhuma — definir no preview</option>
+              <option *ngFor="let cat of expenseCategories" [ngValue]="cat.id">{{ cat.title }}</option>
+            </select>
+          </div>
+        </div>
+
+        <label class="file-drop" [class.has-file]="selectedFileName">
+          <input type="file" accept=".pdf,.PDF,application/pdf" (change)="onFileSelected($event)" />
+          <fa-icon [icon]="faUpload" class="upload-icon"></fa-icon>
+          <span class="file-label" *ngIf="!selectedFileName">Clique ou arraste a fatura .pdf</span>
+          <span class="file-label" *ngIf="selectedFileName">{{ selectedFileName }}</span>
+          <span class="file-hint">Faturas Itaú ou BV Financeira — apenas compras nacionais</span>
+        </label>
+
+        <div *ngIf="isLoading" class="status-message loading">Lendo fatura PDF...</div>
+        <div *ngIf="parseError" class="status-message error">
+          <fa-icon [icon]="faExclamationTriangle"></fa-icon>
+          {{ parseError }}
+        </div>
+        <div *ngIf="!parseError && rows.length > 0" class="status-message success">
+          Fatura {{ detectedBank }} — {{ rows.length }} despesa(s) encontrada(s)
+        </div>
+      </div>
+
+      <div *ngIf="step === 'preview'" class="preview-step">
+        <div class="preview-toolbar">
+          <div class="preview-stats">
+            <span><strong>{{ includedRows.length }}</strong> de {{ rows.length }} selecionados</span>
+            <span class="total">Total: {{ formatCurrency(includedTotal) }}</span>
+          </div>
+          <div class="preview-actions">
+            <button type="button" class="btn-text" (click)="includeAll()">Selecionar todos</button>
+            <button type="button" class="btn-text" (click)="excludeAll()">Desmarcar todos</button>
+            <div class="default-cat-wrap">
+              <label>Categoria padrão</label>
+              <select [(ngModel)]="defaultCategoryId" (ngModelChange)="applyDefaultCategoryToIncluded()">
+                <option [ngValue]="null">—</option>
+                <option *ngFor="let cat of expenseCategories" [ngValue]="cat.id">{{ cat.title }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="invalidIncludedCount > 0" class="validation-hint">
+          <fa-icon [icon]="faExclamationTriangle"></fa-icon>
+          {{ invalidIncludedCount }} lançamento(s) sem categoria ou com descrição curta
+        </div>
+
+        <div class="preview-table-wrap">
+          <table class="preview-table">
+            <thead>
+              <tr>
+                <th class="col-check"></th>
+                <th>Data</th>
+                <th>Descrição</th>
+                <th>Categoria</th>
+                <th class="col-value">Valor</th>
+                <th>Parcela</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr
+                *ngFor="let row of rows"
+                [class.excluded]="!row.included"
+                [class.invalid]="row.included && (!row.category_id || row.description.trim().length < 3)">
+                <td class="col-check">
+                  <input type="checkbox" [checked]="row.included" (change)="toggleRowIncluded(row)" />
+                </td>
+                <td class="col-date">
+                  {{ formatDate(row.date) }}
+                  <span class="date-hint" *ngIf="row.originalDate !== row.date">
+                    Fatura: {{ formatDate(row.originalDate) }}
+                  </span>
+                </td>
+                <td class="col-desc">
+                  <input
+                    type="text"
+                    class="cell-input"
+                    [(ngModel)]="row.description"
+                    [disabled]="!row.included"
+                    placeholder="Descrição" />
+                  <span class="memo-hint" *ngIf="row.originalMemo !== row.description">{{ row.originalMemo }}</span>
+                </td>
+                <td class="col-cat">
+                  <select [(ngModel)]="row.category_id" [disabled]="!row.included">
+                    <option [ngValue]="null">Selecione...</option>
+                    <option *ngFor="let cat of expenseCategories" [ngValue]="cat.id">{{ cat.title }}</option>
+                  </select>
+                </td>
+                <td class="col-value">{{ formatCurrency(row.value) }}</td>
+                <td class="col-installment">
+                  <span *ngIf="row.isInstallment" class="installment-badge">{{ row.portion }}</span>
+                  <span *ngIf="!row.isInstallment" class="text-muted">—</span>
+                  <button
+                    *ngIf="row.isInstallment && row.installmentGroupKey && getGroupRows(row.installmentGroupKey).length > 1"
+                    type="button"
+                    class="btn-plan"
+                    [class.active]="row.createAsInstallmentPlan"
+                    [disabled]="!row.included"
+                    (click)="toggleInstallmentPlan(row)"
+                    title="Agrupar todas as parcelas da fatura em um único parcelamento">
+                    <fa-icon [icon]="faLayerGroup"></fa-icon>
+                    {{ row.createAsInstallmentPlan ? 'Parcelamento' : 'Avulsa' }}
+                  </button>
+                </td>
+                <td class="col-actions">
+                  <button
+                    type="button"
+                    class="btn-icon danger"
+                    (click)="excludeRow(row)"
+                    [disabled]="!row.included"
+                    title="Excluir da importação">
+                    <fa-icon [icon]="faTrash"></fa-icon>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn-secondary" (click)="onClose()" [disabled]="isSubmitting">
+        Cancelar
+      </button>
+
+      <button
+        *ngIf="step === 'preview'"
+        type="button"
+        class="btn-secondary"
+        (click)="backToUpload()"
+        [disabled]="isSubmitting">
+        Voltar
+      </button>
+
+      <button
+        *ngIf="step === 'upload'"
+        type="button"
+        class="btn-primary"
+        (click)="goToPreview()"
+        [disabled]="!canGoToPreview || isLoading">
+        Continuar para revisão
+      </button>
+
+      <button
+        *ngIf="step === 'preview'"
+        type="button"
+        class="btn-primary"
+        (click)="submitImport()"
+        [disabled]="!canSubmit || isSubmitting">
+        <fa-icon [icon]="faCheck"></fa-icon>
+        {{ isSubmitting ? 'Criando...' : 'Criar ' + includedRows.length + ' despesa(s)' }}
+      </button>
+    </div>
+  </div>
+</div>

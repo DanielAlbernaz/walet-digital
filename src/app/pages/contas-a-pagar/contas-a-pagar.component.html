@@ -36,11 +36,15 @@
       </div>
     </div>
 
-    <!-- Search and Filter Bar -->
-    <app-financial-search-bar
-      [placeholder]="'Buscar contas...'"
-      [(searchQuery)]="searchQuery">
-    </app-financial-search-bar>
+    <!-- Advanced Filters -->
+    <app-advanced-filters
+      [categories]="expenseCategories"
+      [paymentMethods]="paymentMethods"
+      [filters]="filters"
+      [sort]="sort"
+      (filtersChange)="onFiltersChange($event)"
+      (sortChange)="onSortChange($event)">
+    </app-advanced-filters>
 
     <!-- Pending Bills List -->
     <div class="pending-bills-card">

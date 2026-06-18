@@ -46,6 +46,16 @@ export class PaymentMethodService {
   }
 
   /**
+   * Ativa ou desativa um método de pagamento
+   * @param id ID do método de pagamento
+   * @param isActive true para ativar, false para desativar
+   */
+  toggleActive(id: number, isActive: boolean): Observable<{ message: string; data: PaymentMethod }> {
+    const body = { is_active: isActive };
+    return this.apiService.put<{ message: string; data: PaymentMethod }>(`payment-methods/${id}`, body);
+  }
+
+  /**
    * Deleta um método de pagamento (soft delete)
    */
   delete(id: number): Observable<{ message: string }> {

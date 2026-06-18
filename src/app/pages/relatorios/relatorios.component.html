@@ -1,0 +1,458 @@
+<app-dashboard-layout>
+  <app-loading-overlay [isLoading]="isLoading"></app-loading-overlay>
+
+  <div class="reports-page">
+    <header class="reports-header">
+      <div class="header-title">
+        <h1>Relatórios e análises</h1>
+        <p *ngIf="periodLabel">Período: <strong>{{ periodLabel }}</strong></p>
+      </div>
+      <button type="button" class="refresh-button" (click)="loadReports()" [disabled]="isLoading">
+        <fa-icon [icon]="faRotate" [class.spinning]="isLoading"></fa-icon>
+        <span>Atualizar</span>
+      </button>
+    </header>
+
+    <section class="filters-panel">
+      <div class="filters-header">
+        <div class="filters-title">
+          <fa-icon [icon]="faFilter"></fa-icon>
+          <span>Filtros</span>
+        </div>
+        <button
+          *ngIf="hasActiveFilters"
+          type="button"
+          class="clear-filters"
+          (click)="resetFilters()">
+          <fa-icon [icon]="faXmark"></fa-icon>
+          <span>Limpar filtros</span>
+        </button>
+      </div>
+
+      <div class="filters-grid">
+        <div class="filter-field">
+          <label>Período</label>
+          <select
+            [ngModel]="selectedPeriod"
+            (ngModelChange)="onPeriodChange($event)"
+            [disabled]="!!customDateFrom && !!customDateTo">
+            <option *ngFor="let opt of periodOptions" [value]="opt.value">{{ opt.label }}</option>
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label>Base da data</label>
+          <select [ngModel]="selectedDateField" (ngModelChange)="onDateFieldChange($event)">
+            <option *ngFor="let opt of dateFieldOptions" [value]="opt.value">{{ opt.label }}</option>
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label>Agrupamento (fluxo)</label>
+          <select [ngModel]="selectedGroupBy" (ngModelChange)="onGroupByChange($event)">
+            <option *ngFor="let opt of groupByOptions" [value]="opt.value">{{ opt.label }}</option>
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label>Categoria</label>
+          <select [(ngModel)]="selectedCategoryId" (ngModelChange)="onCategoryChange()">
+            <option [ngValue]="null">Todas</option>
+            <option *ngFor="let cat of categories" [ngValue]="cat.id">{{ cat.title }}</option>
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label>Forma de pagamento</label>
+          <select [(ngModel)]="selectedPaymentMethodId" (ngModelChange)="onPaymentMethodChange()">
+            <option [ngValue]="null">Todas</option>
+            <option *ngFor="let pm of paymentMethods" [ngValue]="pm.id">{{ pm.name }}</option>
+          </select>
+        </div>
+
+        <div class="filter-field">
+          <label>Data inicial</label>
+          <input
+            type="date"
+            [(ngModel)]="customDateFrom"
+            (change)="onCustomDateChange()" />
+        </div>
+
+        <div class="filter-field">
+          <label>Data final</label>
+          <input
+            type="date"
+            [(ngModel)]="customDateTo"
+            (change)="onCustomDateChange()" />
+        </div>
+
+        <div class="filter-field filter-checkbox">
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [(ngModel)]="includeCancelled"
+              (change)="onIncludeCancelledChange()" />
+            <span>Incluir cancelados</span>
+          </label>
+        </div>
+      </div>
+
+      <div *ngIf="customDateFrom && customDateTo" class="custom-range-chip">
+        <fa-icon [icon]="faCalendarDay"></fa-icon>
+        <span>{{ formatDate(customDateFrom) }} - {{ formatDate(customDateTo) }}</span>
+        <button type="button" (click)="clearCustomDate()">
+          <fa-icon [icon]="faXmark"></fa-icon>
+        </button>
+      </div>
+    </section>
+
+    <div *ngIf="hasError" class="error-banner">
+      <fa-icon [icon]="faCircleExclamation"></fa-icon>
+      <div class="error-content">
+        <span class="error-message">{{ errorMessage }}</span>
+        <ul *ngIf="failedEndpoints.length > 0" class="error-list">
+          <li *ngFor="let fail of failedEndpoints">
+            <strong>{{ fail.label }}:</strong> {{ fail.message }}
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <section class="kpi-grid" *ngIf="summary">
+      <div class="kpi-card kpi-revenue">
+        <div class="kpi-head">
+          <span class="kpi-title">Receitas</span>
+          <div class="kpi-icon">
+            <fa-icon [icon]="faArrowTrendUp"></fa-icon>
+          </div>
+        </div>
+        <div class="kpi-value">{{ formatCurrency(totalRevenue) }}</div>
+        <div class="kpi-footer" *ngIf="comparison?.variation?.revenue as rev">
+          <span class="variation" [ngClass]="getVariationClass(rev.percentage)">
+            <fa-icon [icon]="getVariationIcon(rev.percentage)"></fa-icon>
+            {{ formatPercentage(rev.percentage) }}
+          </span>
+          <span class="compare-label">vs período anterior</span>
+        </div>
+        <div class="kpi-breakdown" *ngIf="summary?.revenue as rev">
+          <span class="chip chip-paid">Pago: {{ formatCurrency(rev.paid) }}</span>
+          <span class="chip chip-pending">Pendente: {{ formatCurrency(rev.pending) }}</span>
+          <span class="chip chip-overdue" *ngIf="rev.overdue">Vencido: {{ formatCurrency(rev.overdue) }}</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-expense">
+        <div class="kpi-head">
+          <span class="kpi-title">Despesas</span>
+          <div class="kpi-icon">
+            <fa-icon [icon]="faArrowTrendDown"></fa-icon>
+          </div>
+        </div>
+        <div class="kpi-value">{{ formatCurrency(totalExpense) }}</div>
+        <div class="kpi-footer" *ngIf="comparison?.variation?.expense as exp">
+          <span class="variation" [ngClass]="getVariationClass(exp.percentage, true)">
+            <fa-icon [icon]="getVariationIcon(exp.percentage)"></fa-icon>
+            {{ formatPercentage(exp.percentage) }}
+          </span>
+          <span class="compare-label">vs período anterior</span>
+        </div>
+        <div class="kpi-breakdown" *ngIf="summary?.expense as exp">
+          <span class="chip chip-paid">Pago: {{ formatCurrency(exp.paid) }}</span>
+          <span class="chip chip-pending">Pendente: {{ formatCurrency(exp.pending) }}</span>
+          <span class="chip chip-overdue" *ngIf="exp.overdue">Vencido: {{ formatCurrency(exp.overdue) }}</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-balance" [class.kpi-negative]="totalBalance < 0">
+        <div class="kpi-head">
+          <span class="kpi-title">Saldo projetado</span>
+          <div class="kpi-icon">
+            <fa-icon [icon]="faWallet"></fa-icon>
+          </div>
+        </div>
+        <div class="kpi-value">{{ formatCurrency(totalBalance) }}</div>
+        <div class="kpi-footer" *ngIf="comparison?.variation?.balance as bal">
+          <span class="variation" [ngClass]="getVariationClass(bal.percentage)">
+            <fa-icon [icon]="getVariationIcon(bal.percentage)"></fa-icon>
+            {{ formatPercentage(bal.percentage) }}
+          </span>
+          <span class="compare-label">vs período anterior</span>
+        </div>
+      </div>
+
+      <div class="kpi-card kpi-realized" [class.kpi-negative]="realizedBalance < 0">
+        <div class="kpi-head">
+          <span class="kpi-title">Saldo realizado</span>
+          <div class="kpi-icon">
+            <fa-icon [icon]="faMoneyBillTransfer"></fa-icon>
+          </div>
+        </div>
+        <div class="kpi-value">{{ formatCurrency(realizedBalance) }}</div>
+        <div class="kpi-footer">
+          <span class="compare-label">Pagos recebidos - pagos efetuados</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="insights-section" *ngIf="insights.length > 0">
+      <div class="insights-header">
+        <fa-icon [icon]="faLightbulb"></fa-icon>
+        <h2>Destaques do período</h2>
+        <span class="insights-subtitle">Onde você gasta mais e o que merece atenção</span>
+      </div>
+      <div class="insights-grid">
+        <div
+          *ngFor="let insight of insights"
+          class="insight-card"
+          [ngClass]="'insight-' + insight.severity">
+          <div class="insight-icon">
+            <fa-icon [icon]="insight.icon"></fa-icon>
+          </div>
+          <div class="insight-content">
+            <span class="insight-title">{{ insight.title }}</span>
+            <p class="insight-message">{{ insight.message }}</p>
+          </div>
+          <span class="insight-highlight" *ngIf="insight.highlight">{{ insight.highlight }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="chart-card cash-flow-card">
+      <div class="card-header">
+        <div class="card-title">
+          <fa-icon [icon]="faChartLine"></fa-icon>
+          <h2>Fluxo de caixa</h2>
+        </div>
+        <span class="card-subtitle">Receitas, despesas e saldo acumulado ao longo do período</span>
+      </div>
+      <div class="card-body chart-body chart-body-lg" *ngIf="hasCashFlowData">
+        <canvas
+          baseChart
+          [type]="lineType"
+          [data]="cashFlowChart"
+          [options]="lineOptions">
+        </canvas>
+      </div>
+      <div *ngIf="!hasCashFlowData" class="empty-state">
+        <fa-icon [icon]="faChartLine"></fa-icon>
+        <p>Sem lançamentos no período selecionado.</p>
+      </div>
+    </section>
+
+    <section class="charts-grid two-columns">
+      <div class="chart-card">
+        <div class="card-header">
+          <div class="card-title">
+            <fa-icon [icon]="faChartPie"></fa-icon>
+            <h2>Despesas por categoria</h2>
+          </div>
+          <span class="card-subtitle">Top 10 categorias com maior gasto</span>
+        </div>
+        <div class="card-body chart-body" *ngIf="hasExpenseByCategory">
+          <canvas
+            baseChart
+            [type]="doughnutType"
+            [data]="expenseByCategoryChart"
+            [options]="doughnutOptions">
+          </canvas>
+        </div>
+        <div *ngIf="!hasExpenseByCategory" class="empty-state">
+          <fa-icon [icon]="faTag"></fa-icon>
+          <p>Nenhuma despesa no período.</p>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="card-header">
+          <div class="card-title">
+            <fa-icon [icon]="faChartPie"></fa-icon>
+            <h2>Receitas por categoria</h2>
+          </div>
+          <span class="card-subtitle">Top 10 categorias com maior receita</span>
+        </div>
+        <div class="card-body chart-body" *ngIf="hasRevenueByCategory">
+          <canvas
+            baseChart
+            [type]="doughnutType"
+            [data]="revenueByCategoryChart"
+            [options]="doughnutOptions">
+          </canvas>
+        </div>
+        <div *ngIf="!hasRevenueByCategory" class="empty-state">
+          <fa-icon [icon]="faTag"></fa-icon>
+          <p>Nenhuma receita no período.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="charts-grid two-columns">
+      <div class="chart-card">
+        <div class="card-header">
+          <div class="card-title">
+            <fa-icon [icon]="faBuildingColumns"></fa-icon>
+            <h2>Por conta bancária</h2>
+          </div>
+          <span class="card-subtitle">Comparativo entre todas as contas do usuário</span>
+        </div>
+        <div class="card-body chart-body" *ngIf="hasFinanceAccountData">
+          <canvas
+            baseChart
+            [type]="barType"
+            [data]="financeAccountChart"
+            [options]="barOptions">
+          </canvas>
+        </div>
+        <div *ngIf="!hasFinanceAccountData" class="empty-state">
+          <fa-icon [icon]="faBuildingColumns"></fa-icon>
+          <p>Sem dados por conta bancária.</p>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <div class="card-header">
+          <div class="card-title">
+            <fa-icon [icon]="faCreditCard"></fa-icon>
+            <h2>Por forma de pagamento</h2>
+          </div>
+          <span class="card-subtitle">Principais formas utilizadas</span>
+        </div>
+        <div class="card-body chart-body" *ngIf="hasPaymentMethodData">
+          <canvas
+            baseChart
+            [type]="barType"
+            [data]="paymentMethodChart"
+            [options]="barOptions">
+          </canvas>
+        </div>
+        <div *ngIf="!hasPaymentMethodData" class="empty-state">
+          <fa-icon [icon]="faCreditCard"></fa-icon>
+          <p>Sem dados por forma de pagamento.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="charts-grid two-columns">
+      <div class="chart-card">
+        <div class="card-header">
+          <div class="card-title">
+            <fa-icon [icon]="faChartColumn"></fa-icon>
+            <h2>Distribuição por status</h2>
+          </div>
+          <span class="card-subtitle">Pago, pendente, vencido e cancelado</span>
+        </div>
+        <div class="card-body chart-body" *ngIf="hasStatusData">
+          <canvas
+            baseChart
+            [type]="doughnutType"
+            [data]="statusChart"
+            [options]="doughnutOptions">
+          </canvas>
+        </div>
+        <div *ngIf="!hasStatusData" class="empty-state">
+          <fa-icon [icon]="faChartColumn"></fa-icon>
+          <p>Sem dados por status.</p>
+        </div>
+
+        <ul *ngIf="hasStatusData" class="status-list">
+          <li *ngFor="let item of getStatusItems()">
+            <span class="status-dot" [style.background]="getStatusColor(item.status)"></span>
+            <fa-icon [icon]="getStatusIcon(item.status)" class="status-icon"></fa-icon>
+            <div class="status-info">
+              <span class="status-name">{{ getStatusLabel(item.status) }}</span>
+              <span class="status-count">{{ item.count }} lançamentos</span>
+            </div>
+            <div class="status-total">
+              <span class="total-value">{{ formatCurrency(item.total) }}</span>
+              <span class="total-percentage">{{ item.percentage | number:'1.1-1' }}%</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      <div class="chart-card">
+        <div class="card-header">
+          <div class="card-title">
+            <fa-icon [icon]="faListUl"></fa-icon>
+            <h2>Top {{ topExpensesLimit }} maiores despesas</h2>
+          </div>
+          <div class="card-actions">
+            <label for="top-limit" class="limit-label">Mostrar</label>
+            <select
+              id="top-limit"
+              class="limit-select"
+              [(ngModel)]="topExpensesLimit"
+              (ngModelChange)="loadReports()">
+              <option [ngValue]="5">5</option>
+              <option [ngValue]="10">10</option>
+              <option [ngValue]="15">15</option>
+              <option [ngValue]="20">20</option>
+            </select>
+          </div>
+        </div>
+
+        <ul class="top-expenses-list" *ngIf="hasTopExpenses">
+          <li *ngFor="let expense of topExpenses?.items; let idx = index">
+            <div class="expense-rank">#{{ idx + 1 }}</div>
+            <div class="expense-info">
+              <span class="expense-description">{{ expense.description || 'Sem descrição' }}</span>
+              <span class="expense-meta">
+                <span *ngIf="expense.category_name">{{ expense.category_name }}</span>
+                <span *ngIf="expense.payment_method_name">• {{ expense.payment_method_name }}</span>
+                <span *ngIf="expense.finance_account_name">• {{ expense.finance_account_name }}</span>
+              </span>
+              <span class="expense-date">{{ formatDate(expense.date) }}</span>
+            </div>
+            <div class="expense-details">
+              <span class="expense-value">{{ formatCurrency(expense.value) }}</span>
+              <span
+                *ngIf="expense.status"
+                class="status-badge"
+                [style.background]="getStatusColor(expense.status)">
+                {{ getStatusLabel(expense.status) }}
+              </span>
+            </div>
+          </li>
+        </ul>
+
+        <div *ngIf="!hasTopExpenses" class="empty-state">
+          <fa-icon [icon]="faListUl"></fa-icon>
+          <p>Nenhuma despesa encontrada no período.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="chart-card finance-account-table" *ngIf="hasFinanceAccountData">
+      <div class="card-header">
+        <div class="card-title">
+          <fa-icon [icon]="faBuildingColumns"></fa-icon>
+          <h2>Resumo por conta</h2>
+        </div>
+        <span class="card-subtitle">Visão detalhada de cada conta financeira</span>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Conta</th>
+              <th class="text-right">Receitas</th>
+              <th class="text-right">Despesas</th>
+              <th class="text-right">Saldo</th>
+              <th class="text-right">Lançamentos</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of byFinanceAccount?.items">
+              <td>{{ item.finance_account_name }}</td>
+              <td class="text-right text-success">{{ formatCurrency(item.revenue) }}</td>
+              <td class="text-right text-destructive">{{ formatCurrency(item.expense) }}</td>
+              <td class="text-right" [class.text-success]="item.balance >= 0" [class.text-destructive]="item.balance < 0">
+                {{ formatCurrency(item.balance) }}
+              </td>
+              <td class="text-right">{{ item.count }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</app-dashboard-layout>

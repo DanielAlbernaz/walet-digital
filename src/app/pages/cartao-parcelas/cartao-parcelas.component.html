@@ -9,6 +9,27 @@
         <p class="page-subtitle">Acompanhe suas compras parceladas - {{ getMonthSubtitle() }}</p>
       </div>
       <div class="header-right">
+        <div class="export-dropdown">
+          <button type="button" class="btn-export" (click)="toggleExportMenu()">
+            <fa-icon [icon]="faFileExport"></fa-icon>
+            <span>Exportar</span>
+            <fa-icon [icon]="faChevronDown" class="chevron" [class.open]="isExportMenuOpen"></fa-icon>
+          </button>
+          <div class="export-menu" *ngIf="isExportMenuOpen">
+            <button type="button" class="export-option" (click)="exportExcel()">
+              <fa-icon [icon]="faFileExcel" class="opt-excel"></fa-icon>
+              <span>Excel (.xlsx)</span>
+            </button>
+            <button type="button" class="export-option" (click)="exportPdf()">
+              <fa-icon [icon]="faFilePdf" class="opt-pdf"></fa-icon>
+              <span>PDF</span>
+            </button>
+            <button type="button" class="export-option" (click)="exportCsv()">
+              <fa-icon [icon]="faFileCsv" class="opt-csv"></fa-icon>
+              <span>CSV</span>
+            </button>
+          </div>
+        </div>
         <div class="month-summary-card">
           <fa-icon [icon]="faCreditCard" class="summary-icon"></fa-icon>
           <div class="summary-content">
@@ -19,8 +40,20 @@
       </div>
     </div>
 
+    <div class="export-backdrop" *ngIf="isExportMenuOpen" (click)="closeExportMenu()"></div>
+
     <!-- Month Selector -->
     <app-month-selector (monthChanged)="onMonthChanged($event)"></app-month-selector>
+
+    <!-- Advanced Filters -->
+    <app-advanced-filters
+      [categories]="expenseCategories"
+      [paymentMethods]="paymentMethods"
+      [filters]="filters"
+      [sort]="sort"
+      (filtersChange)="onFiltersChange($event)"
+      (sortChange)="onSortChange($event)">
+    </app-advanced-filters>
 
     <!-- Installments List -->
     <div class="installments-list">
@@ -70,8 +103,16 @@
     </div>
 
     <!-- Empty State -->
-    <div *ngIf="installments.length === 0 && !isLoading" class="empty-state">
+    <div *ngIf="hasNoInstallments" class="empty-state">
       <p class="empty-text">Nenhuma compra parcelada encontrada.</p>
+    </div>
+
+    <!-- Empty State: Busca sem resultados -->
+    <div *ngIf="searchHasNoResults" class="empty-state">
+      <div class="empty-icon empty-icon-search">
+        <fa-icon [icon]="faSearch"></fa-icon>
+      </div>
+      <p class="empty-text">Nenhum parcelamento encontrado com os parâmetros de busca</p>
     </div>
   </div>
 
@@ -98,7 +139,7 @@
     <div class="panorama-summary">
       <h3 class="summary-title">{{ selectedInstallment.description }}</h3>
       <p class="summary-category">{{ selectedInstallment.category }}</p>
-      
+
       <div class="summary-values">
         <div class="summary-value-item">
           <span class="summary-value-label">Valor Total</span>

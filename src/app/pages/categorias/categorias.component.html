@@ -1,0 +1,169 @@
+<app-dashboard-layout>
+  <app-loading-overlay [isLoading]="isLoading"></app-loading-overlay>
+
+  <div class="categorias-page">
+    <!-- Header Section -->
+    <app-financial-page-header
+      [title]="'Categorias'"
+      [subtitle]="'Gerencie suas categorias de lançamentos'"
+      [showTotal]="false">
+    </app-financial-page-header>
+
+    <!-- Add Button -->
+    <div class="page-actions">
+      <button
+        type="button"
+        class="btn-add"
+        [class.btn-disabled]="!hasCustomCategoriesFeature()"
+        [disabled]="!hasCustomCategoriesFeature()"
+        (click)="onAddClick()"
+        [title]="!hasCustomCategoriesFeature() ? 'Funcionalidade disponível apenas no plano Pro' : ''">
+        <fa-icon [icon]="hasCustomCategoriesFeature() ? faPlus : faLock"></fa-icon>
+        {{ hasCustomCategoriesFeature() ? 'Adicionar' : 'Adicionar (Pro)' }}
+      </button>
+    </div>
+
+    <!-- Categorias Padrão - Receitas -->
+    <div class="categories-section" *ngIf="defaultRevenueCategories.length > 0">
+      <h3 class="section-title section-title-clickable" (click)="toggleDefaultRevenue()">
+        <div class="section-title-left">
+          <fa-icon [icon]="faArrowTrendUp" class="section-title-icon revenue-icon"></fa-icon>
+          Categorias Padrão - Receitas
+        </div>
+        <fa-icon [icon]="isDefaultRevenueExpanded ? faChevronUp : faChevronDown" class="section-title-chevron"></fa-icon>
+      </h3>
+      <div class="categories-list" *ngIf="isDefaultRevenueExpanded">
+        <div *ngFor="let category of defaultRevenueCategories" class="category-item category-item-default">
+          <div class="category-icon icon-revenue">
+            <fa-icon [icon]="getCategoryIcon(category)"></fa-icon>
+          </div>
+          <div class="category-info">
+            <h4 class="category-name">{{ category.title }}</h4>
+            <span class="category-type">{{ getTypeLabel(category) }}</span>
+          </div>
+          <div class="category-badge badge-default">Padrão</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Categorias Padrão - Despesas -->
+    <div class="categories-section" *ngIf="defaultExpenseCategories.length > 0">
+      <h3 class="section-title section-title-clickable" (click)="toggleDefaultExpense()">
+        <div class="section-title-left">
+          <fa-icon [icon]="faArrowTrendDown" class="section-title-icon expense-icon"></fa-icon>
+          Categorias Padrão - Despesas
+        </div>
+        <fa-icon [icon]="isDefaultExpenseExpanded ? faChevronUp : faChevronDown" class="section-title-chevron"></fa-icon>
+      </h3>
+      <div class="categories-list" *ngIf="isDefaultExpenseExpanded">
+        <div *ngFor="let category of defaultExpenseCategories" class="category-item category-item-default">
+          <div class="category-icon icon-expense">
+            <fa-icon [icon]="getCategoryIcon(category)"></fa-icon>
+          </div>
+          <div class="category-info">
+            <h4 class="category-name">{{ category.title }}</h4>
+            <span class="category-type">{{ getTypeLabel(category) }}</span>
+          </div>
+          <div class="category-badge badge-default">Padrão</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Minhas Categorias - Receitas -->
+    <div class="categories-section" *ngIf="hasCustomCategoriesFeature() && customRevenueCategories.length > 0">
+      <h3 class="section-title">
+        <fa-icon [icon]="faArrowTrendUp" class="section-title-icon revenue-icon"></fa-icon>
+        Minhas Categorias - Receitas
+      </h3>
+      <div class="categories-list">
+        <div *ngFor="let category of customRevenueCategories" class="category-item category-item-custom" (click)="onEditClick(category)">
+          <div class="category-icon icon-revenue">
+            <fa-icon [icon]="getCategoryIcon(category)"></fa-icon>
+          </div>
+          <div class="category-info">
+            <h4 class="category-name">{{ category.title }}</h4>
+            <span class="category-type">{{ getTypeLabel(category) }}</span>
+          </div>
+          <div class="category-actions">
+            <span class="category-badge" [ngClass]="category.is_active ? 'badge-active' : 'badge-inactive'">
+              {{ category.is_active ? 'Ativa' : 'Desativada' }}
+            </span>
+            <button type="button" class="btn-icon btn-disable" (click)="$event.stopPropagation(); onDisableClick(category)" [title]="category.is_active ? 'Desativar' : 'Ativar'">
+              <fa-icon [icon]="faPowerOff"></fa-icon>
+            </button>
+            <button type="button" class="btn-icon btn-edit" (click)="$event.stopPropagation(); onEditClick(category)" title="Editar">
+              <fa-icon [icon]="faEdit"></fa-icon>
+            </button>
+            <button type="button" class="btn-icon btn-delete" (click)="$event.stopPropagation(); onDeleteClick(category)" title="Excluir">
+              <fa-icon [icon]="faTrash"></fa-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Minhas Categorias - Despesas -->
+    <div class="categories-section" *ngIf="hasCustomCategoriesFeature() && customExpenseCategories.length > 0">
+      <h3 class="section-title">
+        <fa-icon [icon]="faArrowTrendDown" class="section-title-icon expense-icon"></fa-icon>
+        Minhas Categorias - Despesas
+      </h3>
+      <div class="categories-list">
+        <div *ngFor="let category of customExpenseCategories" class="category-item category-item-custom" (click)="onEditClick(category)">
+          <div class="category-icon icon-expense">
+            <fa-icon [icon]="getCategoryIcon(category)"></fa-icon>
+          </div>
+          <div class="category-info">
+            <h4 class="category-name">{{ category.title }}</h4>
+            <span class="category-type">{{ getTypeLabel(category) }}</span>
+          </div>
+          <div class="category-actions">
+            <span class="category-badge" [ngClass]="category.is_active ? 'badge-active' : 'badge-inactive'">
+              {{ category.is_active ? 'Ativa' : 'Desativada' }}
+            </span>
+            <button type="button" class="btn-icon btn-disable" (click)="$event.stopPropagation(); onDisableClick(category)" [title]="category.is_active ? 'Desativar' : 'Ativar'">
+              <fa-icon [icon]="faPowerOff"></fa-icon>
+            </button>
+            <button type="button" class="btn-icon btn-edit" (click)="$event.stopPropagation(); onEditClick(category)" title="Editar">
+              <fa-icon [icon]="faEdit"></fa-icon>
+            </button>
+            <button type="button" class="btn-icon btn-delete" (click)="$event.stopPropagation(); onDeleteClick(category)" title="Excluir">
+              <fa-icon [icon]="faTrash"></fa-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State para Categorias Personalizadas (Free) -->
+    <div *ngIf="!hasCustomCategoriesFeature() && defaultCategories.length > 0 && !isLoading" class="info-banner">
+      <div class="info-banner-content">
+        <fa-icon [icon]="faLock" class="info-icon"></fa-icon>
+        <div class="info-text">
+          <p class="info-title">Categorias Personalizadas</p>
+          <p class="info-description">Upgrade para o plano Pro para criar suas próprias categorias e ter mais controle sobre sua organização financeira.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State geral -->
+    <div *ngIf="defaultRevenueCategories.length === 0 && defaultExpenseCategories.length === 0 && customRevenueCategories.length === 0 && customExpenseCategories.length === 0 && !isLoading" class="empty-state">
+      <p class="empty-text">Nenhuma categoria encontrada.</p>
+    </div>
+  </div>
+
+  <ng-container *ngIf="hasCustomCategoriesFeature()">
+    <app-floating-action-button
+      *appPermission="'create'"
+      (clicked)="onAddClick()">
+    </app-floating-action-button>
+  </ng-container>
+</app-dashboard-layout>
+
+<!-- Modal de Criar/Editar Categoria -->
+<app-category-modal
+  [isOpen]="isModalOpen"
+  [categoryToEdit]="editingCategory"
+  (close)="onModalClose()"
+  (saved)="onModalSaved()">
+</app-category-modal>
